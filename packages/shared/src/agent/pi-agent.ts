@@ -1167,7 +1167,8 @@ export class PiAgent extends BaseAgent {
         this.config.workspace.rootPath,
         this.config.session?.workingDirectory,
         this.config.systemPromptPreset,
-        'Craft Agents Backend' // backendName
+        'Craft Agents Backend', // backendName
+        this.config.diagramType
       );
 
       // Build context from sources

@@ -16,15 +16,16 @@ import { z } from 'zod';
 /**
  * Available permission modes
  * - 'safe': Read-only, blocks writes, never prompts (green)
+ * - 'plan': Read-only with mandatory planning. Agent must submit a plan before executing.
  * - 'ask': Prompts for dangerous operations (amber)
  * - 'allow-all': Everything allowed, no prompts (violet)
  */
-export type PermissionMode = 'safe' | 'ask' | 'allow-all';
+export type PermissionMode = 'safe' | 'plan' | 'ask' | 'allow-all';
 
 /**
  * Order of modes for cycling with SHIFT+TAB
  */
-export const PERMISSION_MODE_ORDER: PermissionMode[] = ['safe', 'ask', 'allow-all'];
+export const PERMISSION_MODE_ORDER: PermissionMode[] = ['safe', 'plan', 'ask', 'allow-all'];
 
 // ============================================================
 // Permissions Config Types (Browser-safe Zod schemas)
@@ -219,6 +220,18 @@ export const PERMISSION_MODE_CONFIG: Record<PermissionMode, {
       text: 'text-foreground/60',
       bg: 'bg-foreground/60',
       border: 'border-foreground/60',
+    },
+  },
+  'plan': {
+    displayName: 'Plan',
+    shortName: 'Plan',
+    description: 'Read-only with mandatory planning. Agent must submit a plan before executing.',
+    // ListTodo icon from Lucide
+    svgPath: 'M3 6h18M3 12h12M3 18h18M9 6v12',
+    colorClass: {
+      text: 'text-success',
+      bg: 'bg-success',
+      border: 'border-success',
     },
   },
   'ask': {

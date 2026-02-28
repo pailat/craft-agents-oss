@@ -60,15 +60,16 @@ The main agent class that wraps the Claude Agent SDK. Handles:
 - MCP server connections
 - Tool permissions via PreToolUse hook
 - Large result summarization via PostToolUse hook
-- Permission mode integration (safe/ask/allow-all)
+- Permission mode integration (safe/plan/ask/allow-all)
 - Session continuity
 
 ### Permission Modes (`src/agent/mode-manager.ts`, `mode-types.ts`)
-Three-level permission system per session:
+Four-level permission system per session:
 
 | Mode | Display Name | Behavior |
 |------|--------------|----------|
 | `'safe'` | Explore | Read-only, blocks write operations |
+| `'plan'` | Plan | Read-only with mandatory planning via SubmitPlan |
 | `'ask'` | Ask to Edit | Prompts for bash commands (default) |
 | `'allow-all'` | Auto | Auto-approves all commands |
 

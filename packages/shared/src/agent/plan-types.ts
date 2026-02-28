@@ -218,6 +218,7 @@ import { PERMISSION_MODE_CONFIG } from './mode-types.ts';
 /** User-visible messages for each permission mode */
 export const PERMISSION_MODE_MESSAGES: Record<PermissionMode, string> = {
   'safe': `${PERMISSION_MODE_CONFIG['safe'].displayName} mode active. Read-only exploration enabled.`,
+  'plan': `${PERMISSION_MODE_CONFIG['plan'].displayName} mode active. Read-only with mandatory planning.`,
   'ask': `${PERMISSION_MODE_CONFIG['ask'].displayName} mode active. Prompts for dangerous operations.`,
   'allow-all': `${PERMISSION_MODE_CONFIG['allow-all'].displayName} mode active. All operations permitted.`,
 };
@@ -225,6 +226,7 @@ export const PERMISSION_MODE_MESSAGES: Record<PermissionMode, string> = {
 /** System prompts sent to Claude when mode changes */
 export const PERMISSION_MODE_PROMPTS: Record<PermissionMode, string> = {
   'safe': `The user has switched to ${PERMISSION_MODE_CONFIG['safe'].displayName} mode (read-only). You can read files, search, and explore the codebase, but write operations (Bash, Write, Edit, API calls) are blocked. Focus on understanding and explaining rather than making changes.`,
+  'plan': `The user has switched to ${PERMISSION_MODE_CONFIG['plan'].displayName} mode. This is a read-only mode similar to Explore, but you MUST create a structured plan and submit it via the SubmitPlan tool before any implementation can begin. Read files, search, and explore to understand the task, then write a plan to the plans folder and call SubmitPlan. Do NOT attempt to make changes directly — always plan first.`,
   'ask': `The user has switched to ${PERMISSION_MODE_CONFIG['ask'].displayName} mode. Most operations are allowed, but dangerous bash commands will prompt for user approval. You have access to write operations.`,
   'allow-all': `The user has switched to ${PERMISSION_MODE_CONFIG['allow-all'].displayName} mode. All operations are permitted without prompts. Use with care.`,
 };

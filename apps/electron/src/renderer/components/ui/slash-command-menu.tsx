@@ -9,7 +9,7 @@ import { PERMISSION_MODE_CONFIG, PERMISSION_MODE_ORDER, type PermissionMode } fr
 // Types
 // ============================================================================
 
-export type SlashCommandId = 'safe' | 'ask' | 'allow-all' | 'ultrathink'
+export type SlashCommandId = 'safe' | 'plan' | 'ask' | 'allow-all' | 'ultrathink'
 
 /** Union type for all item types in the slash menu */
 export type SlashItemType = 'command' | 'folder'

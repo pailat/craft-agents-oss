@@ -21,6 +21,7 @@ import { handleSubmitPlan } from './handlers/submit-plan.ts';
 import { handleConfigValidate } from './handlers/config-validate.ts';
 import { handleSkillValidate } from './handlers/skill-validate.ts';
 import { handleMermaidValidate } from './handlers/mermaid-validate.ts';
+import { handleExcalidrawValidate } from './handlers/excalidraw-validate.ts';
 import { handleSourceTest } from './handlers/source-test.ts';
 import {
   handleSourceOAuthTrigger,
@@ -54,6 +55,10 @@ export const SkillValidateSchema = z.object({
 export const MermaidValidateSchema = z.object({
   code: z.string().describe('The mermaid diagram code to validate'),
   render: z.boolean().optional().describe('Also attempt to render (catches layout errors)'),
+});
+
+export const ExcalidrawValidateSchema = z.object({
+  code: z.string().describe('The Excalidraw scene JSON to validate'),
 });
 
 export const SourceTestSchema = z.object({
@@ -191,6 +196,15 @@ Use this when:
 
 Returns validation result with specific error messages if invalid.`,
 
+  excalidraw_validate: `Validate Excalidraw scene JSON before outputting.
+
+Use this when:
+- Creating complex drawings with many elements
+- Unsure about element types or properties
+- Debugging a drawing that failed to render
+
+Returns validation result with specific error messages if invalid.`,
+
   source_test: `Validate and test a source configuration.
 
 **This tool performs:**
@@ -325,6 +339,7 @@ export const SESSION_TOOL_DEFS: SessionToolDef[] = [
   { name: 'config_validate', description: TOOL_DESCRIPTIONS.config_validate, inputSchema: ConfigValidateSchema, handler: handleConfigValidate },
   { name: 'skill_validate', description: TOOL_DESCRIPTIONS.skill_validate, inputSchema: SkillValidateSchema, handler: handleSkillValidate },
   { name: 'mermaid_validate', description: TOOL_DESCRIPTIONS.mermaid_validate, inputSchema: MermaidValidateSchema, handler: handleMermaidValidate },
+  { name: 'excalidraw_validate', description: TOOL_DESCRIPTIONS.excalidraw_validate, inputSchema: ExcalidrawValidateSchema, handler: handleExcalidrawValidate },
   { name: 'source_test', description: TOOL_DESCRIPTIONS.source_test, inputSchema: SourceTestSchema, handler: handleSourceTest },
   { name: 'source_oauth_trigger', description: TOOL_DESCRIPTIONS.source_oauth_trigger, inputSchema: SourceOAuthTriggerSchema, handler: handleSourceOAuthTrigger },
   { name: 'source_google_oauth_trigger', description: TOOL_DESCRIPTIONS.source_google_oauth_trigger, inputSchema: SourceOAuthTriggerSchema, handler: handleGoogleOAuthTrigger },

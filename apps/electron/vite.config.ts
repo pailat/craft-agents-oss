@@ -1,15 +1,39 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { resolve } from 'path'
+import { resolve, join } from 'path'
+import { existsSync, statSync, createReadStream } from 'fs'
 
 // NOTE: Source map upload to Sentry is intentionally disabled.
 // To re-enable, uncomment the sentryVitePlugin below and add SENTRY_AUTH_TOKEN,
 // SENTRY_ORG, SENTRY_PROJECT to CI secrets. See CLAUDE.md "Sentry Error Tracking" section.
 // import { sentryVitePlugin } from '@sentry/vite-plugin'
 
+// Serves Excalidraw font assets from node_modules during dev.
+// In production, fonts are copied by copy-assets.ts instead.
+function excalidrawFontsPlugin() {
+  const pkgDir = resolve(__dirname, '../../node_modules/@excalidraw/excalidraw/dist/prod')
+  return {
+    name: 'excalidraw-fonts',
+    configureServer(server: any) {
+      server.middlewares.use((req: any, res: any, next: any) => {
+        if (!req.url?.startsWith('/excalidraw-assets/')) return next()
+        const relative = req.url.slice('/excalidraw-assets/'.length)
+        const filePath = join(pkgDir, relative)
+        if (!existsSync(filePath) || !statSync(filePath).isFile()) return next()
+        const ext = filePath.split('.').pop()
+        const mimeTypes: Record<string, string> = { woff2: 'font/woff2', woff: 'font/woff', ttf: 'font/ttf' }
+        res.setHeader('Content-Type', mimeTypes[ext ?? ''] ?? 'application/octet-stream')
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+        createReadStream(filePath).pipe(res)
+      })
+    }
+  }
+}
+
 export default defineConfig({
   plugins: [
+    excalidrawFontsPlugin(),
     react({
       babel: {
         plugins: [

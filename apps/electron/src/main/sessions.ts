@@ -74,6 +74,7 @@ import type { ToolDisplayMeta } from '@craft-agent/core/types'
 import { getToolIconsDir, getMiniModel } from '@craft-agent/shared/config'
 import type { SummarizeCallback } from '@craft-agent/shared/sources'
 import { type ThinkingLevel, DEFAULT_THINKING_LEVEL } from '@craft-agent/shared/agent/thinking-levels'
+import type { DiagramType } from '@craft-agent/shared/workspaces/types'
 import { evaluateAutoLabels } from '@craft-agent/shared/labels/auto'
 import { listLabels } from '@craft-agent/shared/labels/storage'
 import { extractLabelId } from '@craft-agent/shared/labels'
@@ -567,6 +568,8 @@ interface ManagedSession {
   connectionLocked?: boolean
   // Thinking level for this session ('off', 'think', 'max')
   thinkingLevel?: ThinkingLevel
+  // Diagram format for agent visualizations ('mermaid' | 'excalidraw')
+  diagramType?: DiagramType
   // System prompt preset for mini agents ('default' | 'mini')
   systemPromptPreset?: 'default' | 'mini' | string
   // Role/type of the last message (for badge display without loading messages)
@@ -1860,6 +1863,8 @@ export class SessionManager {
     const userDefaultWorkingDir = wsConfig?.defaults?.workingDirectory || undefined
     // Get default thinking level from workspace config, fallback to global defaults
     const defaultThinkingLevel = wsConfig?.defaults?.thinkingLevel ?? globalDefaults.workspaceDefaults.thinkingLevel
+    // Get default diagram type from workspace config (default: 'mermaid')
+    const defaultDiagramType = wsConfig?.defaults?.diagramType
     // Get default model from workspace config (used when no session-specific model is set)
     const defaultModel = wsConfig?.defaults?.model
     // Get default enabled sources from workspace config
@@ -1922,6 +1927,7 @@ export class SessionManager {
       // This allows the connection to be locked after first message
       llmConnection: options?.llmConnection,
       thinkingLevel: defaultThinkingLevel,
+      diagramType: defaultDiagramType,
       // System prompt preset for mini agents
       systemPromptPreset: options?.systemPromptPreset,
       messageQueue: [],
@@ -2001,6 +2007,7 @@ export class SessionManager {
       ?? wsConfig?.defaults?.permissionMode
       ?? globalDefaults.workspaceDefaults.permissionMode
     const defaultThinkingLevel = wsConfig?.defaults?.thinkingLevel ?? globalDefaults.workspaceDefaults.thinkingLevel
+    const defaultDiagramType = wsConfig?.defaults?.diagramType
 
     const managed: ManagedSession = {
       id: storedSession.id,
@@ -2021,6 +2028,7 @@ export class SessionManager {
       model: storedSession.model,
       llmConnection: storedSession.llmConnection,
       thinkingLevel: defaultThinkingLevel,
+      diagramType: defaultDiagramType,
       messageQueue: [],
       backgroundShellCommands: new Map(),
       enabledSourceSlugs: storedSession.enabledSourceSlugs,
@@ -2282,6 +2290,7 @@ export class SessionManager {
         workspace: managed.workspace,
         miniModel: connection ? (getMiniModel(connection) ?? connection.defaultModel) : undefined,
         thinkingLevel: managed.thinkingLevel,
+        diagramType: managed.diagramType,
         session: sessionConfig,
         onSdkSessionIdUpdate,
         onSdkSessionIdCleared,

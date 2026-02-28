@@ -3,6 +3,7 @@ import { debug } from '../utils/debug.ts';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join, relative, basename } from 'path';
 import { DOC_REFS, APP_ROOT } from '../docs/index.ts';
+import type { DiagramType } from '../workspaces/types.ts';
 import { PERMISSION_MODE_CONFIG } from '../agent/mode-types.ts';
 import { APP_VERSION } from '../version/index.ts';
 import { readPluginName } from '../utils/workspace.ts';
@@ -256,6 +257,8 @@ export interface SystemPromptOptions {
   workingDirectory?: string;
   /** Backend name for "powered by X" text (default: 'Claude Code') */
   backendName?: string;
+  /** Diagram format for agent visualizations (default: 'mermaid') */
+  diagramType?: DiagramType;
 }
 
 /**
@@ -313,7 +316,8 @@ export function getSystemPrompt(
   workspaceRootPath?: string,
   workingDirectory?: string,
   preset?: SystemPromptPreset | string,
-  backendName?: string
+  backendName?: string,
+  diagramType?: DiagramType
 ): string {
   // Use mini agent prompt for quick edits (pass workspace root for config paths)
   if (preset === 'mini') {
@@ -331,7 +335,7 @@ export function getSystemPrompt(
   // Note: Date/time context is now added to user messages instead of system prompt
   // to enable prompt caching. The system prompt stays static and cacheable.
   // Safe Mode context is also in user messages for the same reason.
-  const basePrompt = getCraftAssistantPrompt(workspaceRootPath, backendName);
+  const basePrompt = getCraftAssistantPrompt(workspaceRootPath, backendName, diagramType);
   const fullPrompt = `${basePrompt}${preferences}${debugContext}${projectContextFiles}`;
 
   debug('[getSystemPrompt] full prompt length:', fullPrompt.length);
@@ -408,7 +412,7 @@ function getCraftAgentEnvironmentMarker(): string {
  * @param workspaceRootPath - Root path of the workspace
  * @param backendName - Backend name for "powered by X" text (default: 'Claude Code')
  */
-function getCraftAssistantPrompt(workspaceRootPath?: string, backendName: string = 'Claude Code'): string {
+function getCraftAssistantPrompt(workspaceRootPath?: string, backendName: string = 'Claude Code', diagramType: DiagramType = 'mermaid'): string {
   // Default to ${APP_ROOT}/workspaces/{id} if no path provided
   const workspacePath = workspaceRootPath || `${APP_ROOT}/workspaces/{id}`;
 
@@ -482,7 +486,7 @@ Read relevant context files using the Read tool - they contain architecture info
 | Statuses | \`${DOC_REFS.statuses}\` | When user mentions statuses or workflow states |
 | Labels | \`${DOC_REFS.labels}\` | BEFORE creating/modifying labels |
 | Tool Icons | \`${DOC_REFS.toolIcons}\` | BEFORE modifying tool icon mappings |
-| Mermaid | \`${DOC_REFS.mermaid}\` | When creating diagrams |
+| Diagrams | \`${diagramType === 'excalidraw' ? DOC_REFS.excalidraw : DOC_REFS.mermaid}\` | When creating diagrams |
 | Data Tables | \`${DOC_REFS.dataTables}\` | When working with datasets of 20+ rows |
 | HTML Preview | \`${DOC_REFS.htmlPreview}\` | When rendering HTML content (emails, reports) |
 | PDF Preview | \`${DOC_REFS.pdfPreview}\` | When displaying PDF documents inline |
@@ -735,7 +739,55 @@ Use the \`call_llm\` tool to invoke a secondary LLM for focused subtasks. It run
 **Quick reference:** Read \`${DOC_REFS.llmTool}\` for full parameter docs, output formats, and examples.
 
 ## Diagrams and Visualization
+${diagramType === 'excalidraw' ? `
+Craft Agent renders **Excalidraw diagrams natively** as interactive drawings. Users can zoom, pan, and explore diagrams directly. Use diagrams extensively to visualize:
+- Architecture and module relationships
+- Data flow and state transitions
+- Database schemas and entity relationships
+- System design and component interactions
+- Before/after changes in refactoring
 
+Write Excalidraw scene JSON inside a fenced code block with the \`excalidraw\` language tag. The JSON must have an \`elements\` array with typed shapes.
+
+**Quick example:**
+\`\`\`excalidraw
+{
+  "type": "excalidraw",
+  "version": 2,
+  "elements": [
+    {
+      "type": "rectangle",
+      "x": 100, "y": 100,
+      "width": 200, "height": 80,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "#a5d8ff",
+      "fillStyle": "solid",
+      "roundness": { "type": 3 }
+    },
+    {
+      "type": "text",
+      "x": 140, "y": 125,
+      "text": "Service A",
+      "fontSize": 20
+    }
+  ]
+}
+\`\`\`
+
+**Element types:** \`rectangle\`, \`ellipse\`, \`diamond\`, \`line\`, \`arrow\`, \`text\`, \`freedraw\`, \`image\`, \`frame\`
+
+**Tools:**
+- \`excalidraw_validate\` - Validate scene JSON before outputting
+- Full reference: \`${DOC_REFS.excalidraw}\`
+
+**Tips:**
+- Diagrams are interactive — users can zoom and pan
+- Theme (dark/light) is applied automatically
+- Click the expand button for fullscreen view
+- Keep element counts reasonable for inline rendering (<50 elements)
+- Use \`roundness: { "type": 3 }\` for rounded corners on shapes
+- Use \`arrow\` elements with \`startBinding\`/\`endBinding\` to connect shapes
+- For complex diagrams, split into multiple focused diagrams` : `
 Craft Agent renders **Mermaid diagrams natively** as beautiful themed SVGs. Use diagrams extensively to visualize:
 - Architecture and module relationships
 - Data flow and state transitions
@@ -761,7 +813,7 @@ graph LR
 - **The user sees a 4:3 aspect ratio** - Choose HORIZONTAL (LR/RL) or VERTICAL (TD/BT) for easier viewing and navigation in the UI based on diagram size. I.e. If it's a small diagram, use horizontal (LR/RL). If it's a large diagram with many nodes, use vertical (TD/BT).
 - IMPORTANT! : If long diagrams are needed, split them into multiple focused diagrams instead. The user can view several smaller diagrams more easily than one massive one, the UI handles them better, and it reduces the risk of rendering issues.
 - One concept per diagram - keep them focused
-- Validate complex diagrams with \`mermaid_validate\` first
+- Validate complex diagrams with \`mermaid_validate\` first`}
 
 ## HTML Preview
 

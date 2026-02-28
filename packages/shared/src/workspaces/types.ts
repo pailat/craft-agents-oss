@@ -15,6 +15,12 @@ import type { PermissionMode } from '../agent/mode-manager.ts';
 import type { ThinkingLevel } from '../agent/thinking-levels.ts';
 
 /**
+ * Diagram format for agent-generated visualizations.
+ * Controls which diagram instructions appear in the system prompt.
+ */
+export type DiagramType = 'mermaid' | 'excalidraw';
+
+/**
  * Local MCP server configuration
  * Controls whether stdio-based (local subprocess) MCP servers can be spawned.
  */
@@ -48,6 +54,7 @@ export interface WorkspaceConfig {
     workingDirectory?: string;
     thinkingLevel?: ThinkingLevel; // Default thinking level ('off', 'think', 'max') - default: 'think'
     colorTheme?: string; // Color theme override for this workspace (preset ID). Undefined = inherit from app default.
+    diagramType?: DiagramType; // Diagram format for agent visualizations ('mermaid' | 'excalidraw'). Default: 'mermaid'.
   };
 
   /**

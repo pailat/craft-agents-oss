@@ -20,4 +20,5 @@ export { DocumentFormattedMarkdownOverlay, type DocumentFormattedMarkdownOverlay
 export { ImagePreviewOverlay, type ImagePreviewOverlayProps } from './ImagePreviewOverlay'
 export { PDFPreviewOverlay, type PDFPreviewOverlayProps } from './PDFPreviewOverlay'
 export { MermaidPreviewOverlay, type MermaidPreviewOverlayProps } from './MermaidPreviewOverlay'
+export { ExcalidrawFullscreenOverlay, type ExcalidrawFullscreenOverlayProps } from './ExcalidrawFullscreenOverlay'
 export { HTMLPreviewOverlay, type HTMLPreviewOverlayProps } from './HTMLPreviewOverlay'

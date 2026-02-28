@@ -15,6 +15,7 @@
 import type { AgentEvent } from '@craft-agent/core/types';
 import type { FileAttachment } from '../../utils/files.ts';
 import type { ThinkingLevel } from '../thinking-levels.ts';
+import type { DiagramType } from '../../workspaces/types.ts';
 import type { PermissionMode } from '../mode-manager.ts';
 import type { LoadedSource } from '../../sources/types.ts';
 import type { AuthRequest } from '../session-scoped-tools.ts';
@@ -161,6 +162,9 @@ export interface CoreBackendConfig {
 
   /** Initial thinking level */
   thinkingLevel?: ThinkingLevel;
+
+  /** Diagram format for agent visualizations ('mermaid' | 'excalidraw'). Default: 'mermaid'. */
+  diagramType?: DiagramType;
 
   /** Headless mode flag (disables interactive tools) */
   isHeadless?: boolean;

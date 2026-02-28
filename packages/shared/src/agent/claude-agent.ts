@@ -756,7 +756,10 @@ export class ClaudeAgent extends BaseAgent {
                 this.pinnedPreferencesPrompt ?? undefined,
                 this.config.debugMode,
                 this.workspaceRootPath,
-                this.config.session?.workingDirectory
+                this.config.session?.workingDirectory,
+                undefined, // preset
+                undefined, // backendName
+                this.config.diagramType
               ),
             },
         // Use sdkCwd for SDK session storage - this is set once at session creation and never changes.

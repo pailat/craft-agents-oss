@@ -1121,3 +1121,30 @@ html.dark[data-scenic] .fullscreen-overlay-background {
 .react-pdf__Page__annotations {
   border: none !important;
 }
+
+/* ============================================================================
+   Excalidraw Viewer
+   Map Craft Agent theme vars to Excalidraw's internal CSS vars.
+   viewBackgroundColor is set to 'transparent' in code so the container
+   inherits from the app background.
+   ============================================================================ */
+
+.excalidraw-wrapper {
+  width: 100%;
+}
+
+.excalidraw-wrapper .excalidraw {
+  --color-primary: var(--accent);
+  --color-primary-darker: var(--accent);
+  --color-primary-darkest: var(--accent);
+  --color-surface-primary-container: var(--background);
+  --island-bg-color: var(--background);
+}
+
+/* Hide the main menu hamburger button — not useful in view-only mode.
+   Zoom controls in .footer-center are kept visible for navigation. */
+.excalidraw-wrapper .excalidraw .main-menu-trigger {
+  display: none !important;
+}
+
+
