@@ -1131,6 +1131,7 @@ export class PiAgent extends BaseAgent {
         onPlanSubmitted: (planPath) => this.onPlanSubmitted?.(planPath),
         onAuthRequest: (request) => this.onAuthRequest?.(request),
         queryFn: (request) => this.queryLlm(request),
+        onSessionStatusChanged: (statusId) => this.onStatusChanged?.(statusId),
       });
     }
 
@@ -1167,7 +1168,8 @@ export class PiAgent extends BaseAgent {
         this.config.workspace.rootPath,
         this.config.session?.workingDirectory,
         this.config.systemPromptPreset,
-        'Craft Agents Backend' // backendName
+        'Craft Agents Backend', // backendName
+        this.config.diagramType
       );
 
       // Build context from sources

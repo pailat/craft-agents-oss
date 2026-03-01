@@ -108,6 +108,12 @@ export interface ConfigWatcherCallbacks {
   /** Called when the skills list changes (add/remove folders) */
   onSkillsListChange?: (skills: LoadedSkill[]) => void;
 
+  // Note callbacks
+  /** Called when a specific note changes */
+  onNoteChange?: (noteId: string) => void;
+  /** Called when the notes list changes (add/remove folders) */
+  onNotesListChange?: () => void;
+
   // Permissions callbacks
   /** Called when app-level default permissions change (~/.craft-agent/permissions/default.json) */
   onDefaultPermissionsChange?: () => void;
@@ -424,6 +430,21 @@ export class ConfigWatcher {
         // Icon file changes also trigger a skill change (to update iconPath)
         this.debounce(`skill-icon:${slug}`, () => this.handleSkillChange(slug));
       }
+      return;
+    }
+
+    // Notes changes: notes/{id}/...
+    if (parts[0] === 'notes' && parts.length >= 2) {
+      const noteId = parts[1]!;
+
+      // Directory-level changes (new/removed note folders)
+      if (parts.length === 2) {
+        this.debounce('notes-dir', () => this.handleNotesDirChange());
+        return;
+      }
+
+      // File-level changes (meta.json, content.json, note.md)
+      this.debounce(`note:${noteId}`, () => this.handleNoteChange(noteId));
       return;
     }
 
@@ -898,6 +919,20 @@ export class ConfigWatcher {
   private handleAutomationsConfigChange(): void {
     debug('[ConfigWatcher] automations config changed:', this.workspaceId);
     this.callbacks.onAutomationsConfigChange?.(this.workspaceId);
+  }
+
+  // ============================================================
+  // Note Handlers
+  // ============================================================
+
+  private handleNotesDirChange(): void {
+    debug('[ConfigWatcher] Notes directory changed');
+    this.callbacks.onNotesListChange?.();
+  }
+
+  private handleNoteChange(noteId: string): void {
+    debug('[ConfigWatcher] Note changed:', noteId);
+    this.callbacks.onNoteChange?.(noteId);
   }
 
   // ============================================================

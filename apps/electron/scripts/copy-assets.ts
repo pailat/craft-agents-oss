@@ -19,6 +19,19 @@ cpSync('resources', 'dist/resources', { recursive: true });
 
 console.log('✓ Copied resources/ → dist/resources/');
 
+// Copy Excalidraw fonts for production (served locally, no CDN dependency).
+// The renderer sets EXCALIDRAW_ASSET_PATH = '/excalidraw-assets/' and the
+// Vite plugin handles this in dev; in production we need the actual files.
+const excalidrawFontsSrc = join('..', '..', 'node_modules', '@excalidraw', 'excalidraw', 'dist', 'prod', 'fonts');
+const excalidrawFontsDest = join('dist', 'renderer', 'excalidraw-assets', 'fonts');
+try {
+  mkdirSync(join('dist', 'renderer', 'excalidraw-assets'), { recursive: true });
+  cpSync(excalidrawFontsSrc, excalidrawFontsDest, { recursive: true });
+  console.log('✓ Copied Excalidraw fonts → dist/renderer/excalidraw-assets/');
+} catch (err) {
+  console.log('⚠ Excalidraw fonts copy skipped (optional for dev)');
+}
+
 // Copy PowerShell parser script (for Windows command validation in Explore mode)
 // Source: packages/shared/src/agent/powershell-parser.ps1
 // Destination: dist/resources/powershell-parser.ps1

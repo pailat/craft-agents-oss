@@ -74,10 +74,12 @@ import type { ToolDisplayMeta } from '@craft-agent/core/types'
 import { getToolIconsDir, getMiniModel } from '@craft-agent/shared/config'
 import type { SummarizeCallback } from '@craft-agent/shared/sources'
 import { type ThinkingLevel, DEFAULT_THINKING_LEVEL } from '@craft-agent/shared/agent/thinking-levels'
+import type { DiagramType } from '@craft-agent/shared/workspaces/types'
 import { evaluateAutoLabels } from '@craft-agent/shared/labels/auto'
 import { listLabels } from '@craft-agent/shared/labels/storage'
 import { extractLabelId } from '@craft-agent/shared/labels'
 import { AutomationSystem, AUTOMATIONS_HISTORY_FILE, type AutomationSystemMetadataSnapshot } from '@craft-agent/shared/automations'
+import { loadStatusConfig } from '@craft-agent/shared/statuses'
 
 // Import and re-export (extracted to avoid Electron dependency in tests)
 import { sanitizeForTitle } from './title-sanitizer'
@@ -567,6 +569,8 @@ interface ManagedSession {
   connectionLocked?: boolean
   // Thinking level for this session ('off', 'think', 'max')
   thinkingLevel?: ThinkingLevel
+  // Diagram format for agent visualizations ('mermaid' | 'excalidraw')
+  diagramType?: DiagramType
   // System prompt preset for mini agents ('default' | 'mini')
   systemPromptPreset?: 'default' | 'mini' | string
   // Role/type of the last message (for badge display without loading messages)
@@ -893,6 +897,18 @@ export class SessionManager {
         const skills = loadAllSkills(workspaceRootPath)
         this.broadcastSkillsChanged(skills)
       },
+      onNotesListChange: async () => {
+        sessionLog.info(`Notes list changed in ${workspaceRootPath}`)
+        const { loadAllNotes } = await import('@craft-agent/shared/notes')
+        const notes = loadAllNotes(workspaceRootPath)
+        this.broadcastNotesChanged(notes)
+      },
+      onNoteChange: async (noteId) => {
+        sessionLog.info(`Note '${noteId}' changed`)
+        const { loadAllNotes } = await import('@craft-agent/shared/notes')
+        const notes = loadAllNotes(workspaceRootPath)
+        this.broadcastNotesChanged(notes)
+      },
 
       // Session metadata changes (external edits to session.jsonl headers).
       // Detects label/flag/name/sessionStatus changes made by other instances or scripts.
@@ -1095,6 +1111,15 @@ export class SessionManager {
     if (!this.windowManager) return
     sessionLog.info(`Broadcasting skills changed (${skills.length} skills)`)
     this.windowManager.broadcastToAll(IPC_CHANNELS.SKILLS_CHANGED, skills)
+  }
+
+  /**
+   * Broadcast notes changed event to all windows
+   */
+  private broadcastNotesChanged(notes: import('@craft-agent/shared/notes').LoadedNote[]): void {
+    if (!this.windowManager) return
+    sessionLog.info(`Broadcasting notes changed (${notes.length} notes)`)
+    this.windowManager.broadcastToAll(IPC_CHANNELS.NOTES_CHANGED, notes)
   }
 
   /**
@@ -1860,6 +1885,8 @@ export class SessionManager {
     const userDefaultWorkingDir = wsConfig?.defaults?.workingDirectory || undefined
     // Get default thinking level from workspace config, fallback to global defaults
     const defaultThinkingLevel = wsConfig?.defaults?.thinkingLevel ?? globalDefaults.workspaceDefaults.thinkingLevel
+    // Get default diagram type from workspace config (default: 'mermaid')
+    const defaultDiagramType = wsConfig?.defaults?.diagramType
     // Get default model from workspace config (used when no session-specific model is set)
     const defaultModel = wsConfig?.defaults?.model
     // Get default enabled sources from workspace config
@@ -1922,6 +1949,7 @@ export class SessionManager {
       // This allows the connection to be locked after first message
       llmConnection: options?.llmConnection,
       thinkingLevel: defaultThinkingLevel,
+      diagramType: defaultDiagramType,
       // System prompt preset for mini agents
       systemPromptPreset: options?.systemPromptPreset,
       messageQueue: [],
@@ -2001,6 +2029,7 @@ export class SessionManager {
       ?? wsConfig?.defaults?.permissionMode
       ?? globalDefaults.workspaceDefaults.permissionMode
     const defaultThinkingLevel = wsConfig?.defaults?.thinkingLevel ?? globalDefaults.workspaceDefaults.thinkingLevel
+    const defaultDiagramType = wsConfig?.defaults?.diagramType
 
     const managed: ManagedSession = {
       id: storedSession.id,
@@ -2021,6 +2050,7 @@ export class SessionManager {
       model: storedSession.model,
       llmConnection: storedSession.llmConnection,
       thinkingLevel: defaultThinkingLevel,
+      diagramType: defaultDiagramType,
       messageQueue: [],
       backgroundShellCommands: new Map(),
       enabledSourceSlugs: storedSession.enabledSourceSlugs,
@@ -2282,6 +2312,7 @@ export class SessionManager {
         workspace: managed.workspace,
         miniModel: connection ? (getMiniModel(connection) ?? connection.defaultModel) : undefined,
         thinkingLevel: managed.thinkingLevel,
+        diagramType: managed.diagramType,
         session: sessionConfig,
         onSdkSessionIdUpdate,
         onSdkSessionIdCleared,
@@ -2487,6 +2518,19 @@ export class SessionManager {
 
         // OAuth flow is now user-initiated via startSessionOAuth()
         // The UI will call sessionCommand({ type: 'startOAuth' }) when user clicks "Sign in"
+      }
+
+      // Wire up onStatusChanged to update session status through session manager
+      managed.agent.onStatusChanged = async (statusId: string) => {
+        // Validate status exists in workspace config
+        const statusConfig = loadStatusConfig(managed.workspace.rootPath)
+        const validStatus = statusConfig.statuses.find((s: { id: string }) => s.id === statusId)
+        if (!validStatus) {
+          sessionLog.warn(`Invalid status "${statusId}" requested by agent for session ${managed.id}`)
+          return
+        }
+        sessionLog.info(`Agent requested status change for session ${managed.id}: ${statusId}`)
+        await this.setSessionStatus(managed.id, statusId)
       }
 
       // Wire up onSpawnSession to create sub-sessions from agent tool calls

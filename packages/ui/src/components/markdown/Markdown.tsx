@@ -8,6 +8,7 @@ import { CodeBlock, InlineCode } from './CodeBlock'
 import { MarkdownDiffBlock } from './MarkdownDiffBlock'
 import { MarkdownJsonBlock } from './MarkdownJsonBlock'
 import { MarkdownMermaidBlock } from './MarkdownMermaidBlock'
+import { MarkdownExcalidrawBlock } from './MarkdownExcalidrawBlock'
 import { MarkdownDatatableBlock } from './MarkdownDatatableBlock'
 import { MarkdownSpreadsheetBlock } from './MarkdownSpreadsheetBlock'
 import { MarkdownHtmlBlock } from './MarkdownHtmlBlock'
@@ -220,6 +221,10 @@ function createComponents(
                                 code === firstMermaidCodeRef.current
             return <MarkdownMermaidBlock code={code} className="my-2" showExpandButton={!isFirstBlock} />
           }
+          // Excalidraw code blocks → interactive drawing viewer
+          if (match?.[1] === 'excalidraw') {
+            return <MarkdownExcalidrawBlock code={code} className="my-2" />
+          }
           return <CodeBlock code={code} language={match?.[1]} mode="full" className="my-2" />
         }
 
@@ -311,6 +316,10 @@ function createComponents(
                               firstMermaidCodeRef?.current != null &&
                               code === firstMermaidCodeRef.current
           return <MarkdownMermaidBlock code={code} className="my-2" showExpandButton={!isFirstBlock} />
+        }
+        // Excalidraw code blocks → interactive drawing viewer
+        if (match?.[1] === 'excalidraw') {
+          return <MarkdownExcalidrawBlock code={code} className="my-2" />
         }
         return <CodeBlock code={code} language={match?.[1]} mode="full" className="my-2" />
       }

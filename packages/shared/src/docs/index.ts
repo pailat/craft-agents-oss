@@ -111,6 +111,7 @@ export const DOC_REFS = {
   hooks: `${APP_ROOT}/docs/automations.md`,
   tasks: `${APP_ROOT}/docs/automations.md`,
   mermaid: `${APP_ROOT}/docs/mermaid.md`,
+  excalidraw: `${APP_ROOT}/docs/excalidraw.md`,
   dataTables: `${APP_ROOT}/docs/data-tables.md`,
   htmlPreview: `${APP_ROOT}/docs/html-preview.md`,
   pdfPreview: `${APP_ROOT}/docs/pdf-preview.md`,

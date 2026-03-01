@@ -21,6 +21,10 @@ export type { SkillValidateArgs } from './skill-validate.ts';
 export { handleMermaidValidate } from './mermaid-validate.ts';
 export type { MermaidValidateArgs } from './mermaid-validate.ts';
 
+// Excalidraw Validate
+export { handleExcalidrawValidate } from './excalidraw-validate.ts';
+export type { ExcalidrawValidateArgs } from './excalidraw-validate.ts';
+
 // Source Test
 export { handleSourceTest } from './source-test.ts';
 export type { SourceTestArgs } from './source-test.ts';
@@ -46,6 +50,10 @@ export type { CredentialPromptArgs } from './credential-prompt.ts';
 // Update Preferences
 export { handleUpdatePreferences } from './update-preferences.ts';
 export type { UpdatePreferencesArgs } from './update-preferences.ts';
+
+// Set Session Status
+export { handleSetSessionStatus } from './set-session-status.ts';
+export type { SetSessionStatusArgs } from './set-session-status.ts';
 
 // Transform Data
 export { handleTransformData } from './transform-data.ts';

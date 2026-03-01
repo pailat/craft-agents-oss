@@ -231,9 +231,18 @@ Rules are additive - they can only allow more operations, not restrict further.
 }
 ```
 
-## Planning in Explore Mode
+## Planning
 
-In Explore mode, you can create implementation plans that the user can accept to transition to execution.
+You can create implementation plans that the user can accept to transition to execution. Planning works in both **Explore** and **Plan** mode.
+
+### Plan Mode
+
+Plan mode is a dedicated permission mode for mandatory planning. It behaves identically to Explore (read-only + writes to plansFolderPath/dataFolderPath) but instructs the agent to **always propose a plan via SubmitPlan before executing changes**.
+
+Users can switch to Plan mode via:
+- The permission mode dropdown (between Explore and Ask to Edit)
+- SHIFT+TAB cycling: Explore → Plan → Ask to Edit → Execute
+- The `/plan` slash command
 
 ### When to Create Plans
 
@@ -241,13 +250,14 @@ Create a plan when:
 - The task has multiple complex steps
 - You want user approval before making changes
 - You've gathered enough context and are ready to implement
+- The user is in Plan mode (always create plans in this mode)
 
 ### Creating a Plan
 
 1. Write your plan to a markdown file in the session's plans folder
 2. Call `SubmitPlan` with the file path
 3. The user sees a formatted plan with an "Accept Plan" button
-4. Clicking "Accept Plan" exits Explore mode and begins implementation
+4. Clicking "Accept Plan" exits Explore/Plan mode and begins implementation
 
 ### Plan Format
 
@@ -263,13 +273,13 @@ Brief description of what this plan accomplishes.
 3. ...
 ```
 
-### Explore → Implementation Workflow
+### Plan → Implementation Workflow
 
 The recommended workflow:
-1. **Explore** - Read files, search code, understand the codebase
+1. **Explore/Plan** - Read files, search code, understand the codebase
 2. **Plan** - Write a structured plan to the plans folder
 3. **Submit** - Call `SubmitPlan` to present to user
-4. **Accept** - User clicks "Accept Plan" to exit Explore mode
+4. **Accept** - User clicks "Accept Plan" to exit Explore/Plan mode
 5. **Execute** - Implement the plan with full permissions
 
 This provides a smooth transition from exploration to implementation with user oversight.

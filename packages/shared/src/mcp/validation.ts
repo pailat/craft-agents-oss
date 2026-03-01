@@ -342,6 +342,8 @@ export interface StdioValidationConfig {
   args?: string[];
   /** Environment variables for the spawned process */
   env?: Record<string, string>;
+  /** Working directory for the spawned process */
+  cwd?: string;
   /** Timeout in ms (default: 30000) */
   timeout?: number;
 }
@@ -355,7 +357,7 @@ export interface StdioValidationConfig {
 export async function validateStdioMcpConnection(
   config: StdioValidationConfig
 ): Promise<McpValidationResult> {
-  const { command, args = [], env = {}, timeout = 30000 } = config;
+  const { command, args = [], env = {}, cwd, timeout = 30000 } = config;
 
   debug(`[stdio-validation] Spawning: ${command} ${args.join(' ')}`);
 
@@ -415,6 +417,7 @@ export async function validateStdioMcpConnection(
     const spawnPromise = (async () => {
       childProcess = spawn(command, args, {
         env: { ...process.env, ...env },
+        cwd,
         stdio: ['pipe', 'pipe', 'pipe'],
       });
 

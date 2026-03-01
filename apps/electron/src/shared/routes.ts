@@ -156,6 +156,12 @@ export const routes = {
       return `skills/skill/${skillSlug}` as const
     },
 
+    /** Notes view (notes navigator). Pass a noteId for a note detail view. */
+    notes: (noteId?: string) => {
+      if (!noteId) return 'notes' as const
+      return `notes/note/${noteId}` as const
+    },
+
     /** Automations view (automations navigator) - supports type filtering */
     automations: (params?: { automationId?: string; type?: 'scheduled' | 'event' | 'agentic' }) => {
       const { automationId, type } = params ?? {}

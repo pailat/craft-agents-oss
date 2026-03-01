@@ -33,7 +33,7 @@ export const SERVER_BUILD_ERRORS = {
  */
 export type McpServerConfig =
   | { type: 'http' | 'sse'; url: string; headers?: Record<string, string> }
-  | { type: 'stdio'; command: string; args?: string[]; env?: Record<string, string> };
+  | { type: 'stdio'; command: string; args?: string[]; env?: Record<string, string>; cwd?: string; requiredPermissions?: string[] };
 
 /**
  * Source with its credential pre-loaded
@@ -99,6 +99,8 @@ export class SourceServerBuilder {
         command: mcp.command,
         args: mcp.args,
         env: mcp.env,
+        cwd: mcp.cwd,
+        requiredPermissions: mcp.requiredPermissions,
       };
     }
 

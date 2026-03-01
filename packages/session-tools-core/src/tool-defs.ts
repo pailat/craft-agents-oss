@@ -21,6 +21,7 @@ import { handleSubmitPlan } from './handlers/submit-plan.ts';
 import { handleConfigValidate } from './handlers/config-validate.ts';
 import { handleSkillValidate } from './handlers/skill-validate.ts';
 import { handleMermaidValidate } from './handlers/mermaid-validate.ts';
+import { handleExcalidrawValidate } from './handlers/excalidraw-validate.ts';
 import { handleSourceTest } from './handlers/source-test.ts';
 import {
   handleSourceOAuthTrigger,
@@ -32,6 +33,7 @@ import { handleCredentialPrompt } from './handlers/credential-prompt.ts';
 import { handleUpdatePreferences } from './handlers/update-preferences.ts';
 import { handleTransformData } from './handlers/transform-data.ts';
 import { handleRenderTemplate } from './handlers/render-template.ts';
+import { handleSetSessionStatus } from './handlers/set-session-status.ts';
 
 // ============================================================
 // Canonical Zod Schemas
@@ -54,6 +56,10 @@ export const SkillValidateSchema = z.object({
 export const MermaidValidateSchema = z.object({
   code: z.string().describe('The mermaid diagram code to validate'),
   render: z.boolean().optional().describe('Also attempt to render (catches layout errors)'),
+});
+
+export const ExcalidrawValidateSchema = z.object({
+  code: z.string().describe('The Excalidraw scene JSON to validate'),
 });
 
 export const SourceTestSchema = z.object({
@@ -111,6 +117,10 @@ export const UpdatePreferencesSchema = z.object({
   country: z.string().optional().describe("The user's country"),
   language: z.string().optional().describe("The user's preferred language for responses"),
   notes: z.string().optional().describe('Additional notes about the user that would be helpful to remember (preferences, context, etc.). Replaces any existing notes.'),
+});
+
+export const SetSessionStatusSchema = z.object({
+  statusId: z.string().describe('The status ID to set (e.g., "needs-review", "done", "todo")'),
 });
 
 export const TransformDataSchema = z.object({
@@ -191,6 +201,15 @@ Use this when:
 
 Returns validation result with specific error messages if invalid.`,
 
+  excalidraw_validate: `Validate Excalidraw scene JSON before outputting.
+
+Use this when:
+- Creating complex drawings with many elements
+- Unsure about element types or properties
+- Debugging a drawing that failed to render
+
+Returns validation result with specific error messages if invalid.`,
+
   source_test: `Validate and test a source configuration.
 
 **This tool performs:**
@@ -248,6 +267,21 @@ The user will see a secure input UI with appropriate fields based on the auth mo
 **IMPORTANT:** After calling this tool, execution will be paused for user input.`,
 
   update_user_preferences: `Update stored user preferences. Use this when you learn information about the user that would be helpful to remember for future conversations. This includes their name, timezone, location, preferred language, or any other relevant notes. Only update fields you have confirmed information about - don't guess.`,
+
+  set_session_status: `Update the current session's workflow status.
+
+Use this to signal that work is complete and ready for user review.
+
+**When to use:**
+- After completing the user's requested task — set to "needs-review"
+- After a plan has been fully executed — set to "needs-review"
+
+**When NOT to use:**
+- During ongoing conversation or exploration
+- When the user is still asking questions
+- For status changes the user didn't implicitly request
+
+**Available statuses:** "backlog", "todo", "needs-review", "done", "cancelled" (plus any custom statuses configured in the workspace).`,
 
   transform_data: `Transform data files using a script and write structured output for datatable/spreadsheet blocks, or extract HTML content for html-preview blocks.
 
@@ -325,6 +359,7 @@ export const SESSION_TOOL_DEFS: SessionToolDef[] = [
   { name: 'config_validate', description: TOOL_DESCRIPTIONS.config_validate, inputSchema: ConfigValidateSchema, handler: handleConfigValidate },
   { name: 'skill_validate', description: TOOL_DESCRIPTIONS.skill_validate, inputSchema: SkillValidateSchema, handler: handleSkillValidate },
   { name: 'mermaid_validate', description: TOOL_DESCRIPTIONS.mermaid_validate, inputSchema: MermaidValidateSchema, handler: handleMermaidValidate },
+  { name: 'excalidraw_validate', description: TOOL_DESCRIPTIONS.excalidraw_validate, inputSchema: ExcalidrawValidateSchema, handler: handleExcalidrawValidate },
   { name: 'source_test', description: TOOL_DESCRIPTIONS.source_test, inputSchema: SourceTestSchema, handler: handleSourceTest },
   { name: 'source_oauth_trigger', description: TOOL_DESCRIPTIONS.source_oauth_trigger, inputSchema: SourceOAuthTriggerSchema, handler: handleSourceOAuthTrigger },
   { name: 'source_google_oauth_trigger', description: TOOL_DESCRIPTIONS.source_google_oauth_trigger, inputSchema: SourceOAuthTriggerSchema, handler: handleGoogleOAuthTrigger },
@@ -332,6 +367,7 @@ export const SESSION_TOOL_DEFS: SessionToolDef[] = [
   { name: 'source_microsoft_oauth_trigger', description: TOOL_DESCRIPTIONS.source_microsoft_oauth_trigger, inputSchema: SourceOAuthTriggerSchema, handler: handleMicrosoftOAuthTrigger },
   { name: 'source_credential_prompt', description: TOOL_DESCRIPTIONS.source_credential_prompt, inputSchema: CredentialPromptSchema, handler: handleCredentialPrompt },
   { name: 'update_user_preferences', description: TOOL_DESCRIPTIONS.update_user_preferences, inputSchema: UpdatePreferencesSchema, handler: handleUpdatePreferences },
+  { name: 'set_session_status', description: TOOL_DESCRIPTIONS.set_session_status, inputSchema: SetSessionStatusSchema, handler: handleSetSessionStatus },
   { name: 'transform_data', description: TOOL_DESCRIPTIONS.transform_data, inputSchema: TransformDataSchema, handler: handleTransformData },
   { name: 'render_template', description: TOOL_DESCRIPTIONS.render_template, inputSchema: RenderTemplateSchema, handler: handleRenderTemplate },
   { name: 'call_llm', description: TOOL_DESCRIPTIONS.call_llm, inputSchema: CallLlmSchema, handler: null },

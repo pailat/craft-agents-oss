@@ -440,7 +440,7 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
 
   // Handle command selection from dropdown
   const handleSelect = React.useCallback((commandId: SlashCommandId) => {
-    if (commandId === 'safe' || commandId === 'ask' || commandId === 'allow-all') {
+    if (commandId === 'safe' || commandId === 'plan' || commandId === 'ask' || commandId === 'allow-all') {
       setOptimisticMode(commandId)
       onPermissionModeChange?.(commandId)
     } else if (commandId === 'ultrathink') {
@@ -460,6 +460,10 @@ function PermissionModeDropdown({ permissionMode, ultrathinkEnabled = false, onP
     'safe': {
       className: 'bg-foreground/5 text-foreground/60',
       shadowVar: 'var(--foreground-rgb)',
+    },
+    'plan': {
+      className: 'bg-success/10 text-success',
+      shadowVar: 'var(--success-rgb)',
     },
     'ask': {
       className: 'bg-info/10 text-info',

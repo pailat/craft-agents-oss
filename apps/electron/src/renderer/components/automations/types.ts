@@ -185,6 +185,7 @@ export function getEventDisplayName(event: AutomationTrigger): string {
 /** Maps permission mode values to user-friendly labels */
 export const PERMISSION_DISPLAY_NAMES: Record<string, string> = {
   'safe':      'Safe Mode',
+  'plan':      'Plan Mode',
   'ask':       'Ask First',
   'allow-all': 'Allow All',
 }

@@ -455,6 +455,7 @@ export class ClaudeAgent extends BaseAgent {
       },
       queryFn: (request) => this.queryLlm(request),
       spawnSessionFn: (input) => this.preExecuteSpawnSession(input),
+      onSessionStatusChanged: (statusId) => this.onStatusChanged?.(statusId),
     });
 
     // Start config watcher for hot-reloading source changes
@@ -756,7 +757,10 @@ export class ClaudeAgent extends BaseAgent {
                 this.pinnedPreferencesPrompt ?? undefined,
                 this.config.debugMode,
                 this.workspaceRootPath,
-                this.config.session?.workingDirectory
+                this.config.session?.workingDirectory,
+                undefined, // preset
+                undefined, // backendName
+                this.config.diagramType
               ),
             },
         // Use sdkCwd for SDK session storage - this is set once at session creation and never changes.

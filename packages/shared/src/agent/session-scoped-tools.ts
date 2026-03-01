@@ -81,6 +81,12 @@ export interface SessionScopedToolCallbacks {
    * Each agent backend delegates to its onSpawnSession callback.
    */
   spawnSessionFn?: SpawnSessionFn;
+
+  /**
+   * Called when the agent changes the session status via set_session_status tool.
+   * Routes through the session manager for in-memory update + UI notification.
+   */
+  onSessionStatusChanged?: (statusId: string) => void;
 }
 
 // Registry of callbacks keyed by sessionId
@@ -244,6 +250,17 @@ export function getSessionScopedTools(
       callbacks?.onAuthRequest?.(request as AuthRequest);
     },
   });
+
+  // Override setSessionStatus to route through session manager (not raw storage)
+  // This ensures in-memory state, UI notification, and automation events all fire.
+  ctx.setSessionStatus = (statusId: string): void | { error: string } => {
+    const callbacks = getSessionScopedToolCallbacks(sessionId);
+    if (callbacks?.onSessionStatusChanged) {
+      callbacks.onSessionStatusChanged(statusId);
+    } else {
+      return { error: 'Session status callback not available.' };
+    }
+  };
 
   // Helper to create a tool from the canonical registry.
   // The `as any` on schema bridges a Zod generic-variance issue when .shape

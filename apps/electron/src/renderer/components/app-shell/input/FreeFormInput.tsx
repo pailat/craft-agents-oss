@@ -225,7 +225,7 @@ export function FreeFormInput({
   onUltrathinkChange,
   permissionMode = 'ask',
   onPermissionModeChange,
-  enabledModes = ['safe', 'ask', 'allow-all'],
+  enabledModes = PERMISSION_MODE_ORDER,
   inputValue,
   onInputChange,
   unstyled = false,
@@ -528,9 +528,9 @@ export function FreeFormInput({
         toast.error('No details provided')
         return
       }
-      // Switch to allow-all (Auto) mode if in Explore mode (allow execution without prompts)
-      // Only switch if currently in safe mode - if user is in 'ask' mode, respect their choice
-      if (permissionMode === 'safe') {
+      // Switch to allow-all (Auto) mode if in Explore or Plan mode (allow execution without prompts)
+      // Only switch if currently in safe/plan mode - if user is in 'ask' mode, respect their choice
+      if (permissionMode === 'safe' || permissionMode === 'plan') {
         onPermissionModeChange?.('allow-all')
       }
       // Submit the message
@@ -553,8 +553,8 @@ export function FreeFormInput({
 
       const planPath = e.detail?.planPath
 
-      // Switch to allow-all (Auto) mode if in Explore mode
-      if (permissionMode === 'safe') {
+      // Switch to allow-all (Auto) mode if in Explore or Plan mode
+      if (permissionMode === 'safe' || permissionMode === 'plan') {
         onPermissionModeChange?.('allow-all')
       }
 

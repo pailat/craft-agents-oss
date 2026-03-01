@@ -58,6 +58,7 @@ import {
   isSourcesNavigation,
   isSettingsNavigation,
   isSkillsNavigation,
+  isNotesNavigation,
   isAutomationsNavigation,
   DEFAULT_NAVIGATION_STATE,
 } from '../../shared/types'
@@ -65,6 +66,7 @@ import { isValidSettingsSubpage, type SettingsSubpage } from '../../shared/setti
 import { sessionMetaMapAtom, updateSessionMetaAtom, type SessionMeta } from '@/atoms/sessions'
 import { sourcesAtom } from '@/atoms/sources'
 import { skillsAtom } from '@/atoms/skills'
+import { notesAtom } from '@/atoms/notes'
 
 // Re-export routes for convenience
 export { routes }
@@ -72,7 +74,7 @@ export type { Route }
 
 // Re-export navigation state types for consumers
 export type { NavigationState, SessionFilter }
-export { isSessionsNavigation, isSourcesNavigation, isSettingsNavigation, isSkillsNavigation, isAutomationsNavigation }
+export { isSessionsNavigation, isSourcesNavigation, isSettingsNavigation, isSkillsNavigation, isNotesNavigation, isAutomationsNavigation }
 
 interface NavigationContextValue {
   /** Navigate to a route */
@@ -135,6 +137,9 @@ export function NavigationProvider({
 
   // Read skills from atom (populated by AppShell)
   const skills = useAtomValue(skillsAtom)
+
+  // Read notes from atom (populated by AppShell)
+  const notes = useAtomValue(notesAtom)
 
   // UNIFIED NAVIGATION STATE - single source of truth for all 3 panels
   const [navigationState, setNavigationState] = useState<NavigationState>(DEFAULT_NAVIGATION_STATE)
@@ -250,6 +255,14 @@ export function NavigationProvider({
       return skills[0]?.slug ?? null
     },
     [skills]
+  )
+
+  // Helper: Get first note ID (most recently updated)
+  const getFirstNoteId = useCallback(
+    (): string | null => {
+      return notes[0]?.id ?? null
+    },
+    [notes]
   )
 
   // Handle action navigation (side effects that don't change navigation state)
@@ -488,6 +501,22 @@ export function NavigationProvider({
         }
       }
 
+      // For notes: auto-select first note if no details provided
+      if (isNotesNavigation(nextState) && !nextState.details) {
+        const firstNoteId = getFirstNoteId()
+        if (firstNoteId) {
+          const stateWithSelection: NavigationState = {
+            ...nextState,
+            details: { type: 'note', noteId: firstNoteId },
+          }
+          setNavigationState(stateWithSelection)
+          return stateWithSelection
+        } else {
+          setNavigationState(nextState)
+          return nextState
+        }
+      }
+
       // For automations: no auto-selection yet
       if (isAutomationsNavigation(nextState)) {
         setNavigationState(nextState)
@@ -506,7 +535,7 @@ export function NavigationProvider({
       setNavigationState(nextState)
       return nextState
     },
-    [getFirstSessionId, getLastSelectedSessionId, getFirstSourceSlug, getFirstSkillSlug, setSession, store, workspaceId]
+    [getFirstSessionId, getLastSelectedSessionId, getFirstSourceSlug, getFirstSkillSlug, getFirstNoteId, setSession, store, workspaceId]
   )
 
   // Main navigate function - unified approach using NavigationState
@@ -623,13 +652,18 @@ export function NavigationProvider({
       return true
     }
 
+    // Notes: always valid (note existence checked at render time)
+    if (isNotesNavigation(navState)) {
+      return true
+    }
+
     // Automations: always valid (navigation doesn't depend on specific automation)
     if (isAutomationsNavigation(navState)) {
       return true
     }
 
     return true // Routes without details are always valid
-  }, [sessionMetaMap, sources, skills])
+  }, [sessionMetaMap, sources, skills, notes])
 
   // Go back in history (using our custom stack)
   // When encountering invalid entries (deleted sessions/sources), remove them from the stack

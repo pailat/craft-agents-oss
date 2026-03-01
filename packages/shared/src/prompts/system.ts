@@ -3,6 +3,7 @@ import { debug } from '../utils/debug.ts';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join, relative, basename } from 'path';
 import { DOC_REFS, APP_ROOT } from '../docs/index.ts';
+import type { DiagramType } from '../workspaces/types.ts';
 import { PERMISSION_MODE_CONFIG } from '../agent/mode-types.ts';
 import { APP_VERSION } from '../version/index.ts';
 import { readPluginName } from '../utils/workspace.ts';
@@ -256,6 +257,8 @@ export interface SystemPromptOptions {
   workingDirectory?: string;
   /** Backend name for "powered by X" text (default: 'Claude Code') */
   backendName?: string;
+  /** Diagram format for agent visualizations (default: 'mermaid') */
+  diagramType?: DiagramType;
 }
 
 /**
@@ -313,7 +316,8 @@ export function getSystemPrompt(
   workspaceRootPath?: string,
   workingDirectory?: string,
   preset?: SystemPromptPreset | string,
-  backendName?: string
+  backendName?: string,
+  diagramType?: DiagramType
 ): string {
   // Use mini agent prompt for quick edits (pass workspace root for config paths)
   if (preset === 'mini') {
@@ -331,7 +335,7 @@ export function getSystemPrompt(
   // Note: Date/time context is now added to user messages instead of system prompt
   // to enable prompt caching. The system prompt stays static and cacheable.
   // Safe Mode context is also in user messages for the same reason.
-  const basePrompt = getCraftAssistantPrompt(workspaceRootPath, backendName);
+  const basePrompt = getCraftAssistantPrompt(workspaceRootPath, backendName, diagramType);
   const fullPrompt = `${basePrompt}${preferences}${debugContext}${projectContextFiles}`;
 
   debug('[getSystemPrompt] full prompt length:', fullPrompt.length);
@@ -408,7 +412,7 @@ function getCraftAgentEnvironmentMarker(): string {
  * @param workspaceRootPath - Root path of the workspace
  * @param backendName - Backend name for "powered by X" text (default: 'Claude Code')
  */
-function getCraftAssistantPrompt(workspaceRootPath?: string, backendName: string = 'Claude Code'): string {
+function getCraftAssistantPrompt(workspaceRootPath?: string, backendName: string = 'Claude Code', diagramType: DiagramType = 'mermaid'): string {
   // Default to ${APP_ROOT}/workspaces/{id} if no path provided
   const workspacePath = workspaceRootPath || `${APP_ROOT}/workspaces/{id}`;
 
@@ -482,7 +486,7 @@ Read relevant context files using the Read tool - they contain architecture info
 | Statuses | \`${DOC_REFS.statuses}\` | When user mentions statuses or workflow states |
 | Labels | \`${DOC_REFS.labels}\` | BEFORE creating/modifying labels |
 | Tool Icons | \`${DOC_REFS.toolIcons}\` | BEFORE modifying tool icon mappings |
-| Mermaid | \`${DOC_REFS.mermaid}\` | When creating diagrams |
+| Diagrams | \`${diagramType === 'excalidraw' ? DOC_REFS.excalidraw : DOC_REFS.mermaid}\` | When creating diagrams |
 | Data Tables | \`${DOC_REFS.dataTables}\` | When working with datasets of 20+ rows |
 | HTML Preview | \`${DOC_REFS.htmlPreview}\` | When rendering HTML content (emails, reports) |
 | PDF Preview | \`${DOC_REFS.pdfPreview}\` | When displaying PDF documents inline |
@@ -494,6 +498,21 @@ Read relevant context files using the Read tool - they contain architecture info
 
 You can store and update user preferences using the \`update_user_preferences\` tool. 
 When you learn information about the user (their name, timezone, location, language preference, or other relevant context), proactively offer to save it for future conversations.
+
+## Session Status
+
+When you complete a task requested by the user, update the session status to \`"needs-review"\` using the \`set_session_status\` tool. This signals to the user that work is ready for their review.
+
+**Set status to "needs-review" when:**
+- You've finished implementing changes requested by the user
+- You've completed executing an approved plan
+- The user's request has been fully addressed and you're confident in the result
+
+**Do NOT change status when:**
+- The conversation is exploratory (questions, research, explanations)
+- You're still waiting for user input or clarification
+- The task failed or is incomplete
+- The user is managing statuses themselves
 
 ## Interaction Guidelines
 
@@ -612,6 +631,63 @@ The \`session\` MCP server provides tools for managing external sources:
 You have access to web search for up-to-date information. Use it proactively to get up-to-date information and best practices.
 Your memory is limited as of cut-off date, so it contain wrong or stale info, or be out-of-date, specifically for fast-changing topics like technology, current events, and recent developments.
 I.e. there is now iOS/MacOS26, it's 2026, the world has changed a lot since your training data!
+
+## Knowledge Base (CKL)
+
+When a CKL knowledge base is connected (source: \`kos\`), you have access to \`ckl_*\` tools for searching and navigating indexed codebases, documentation, and compiled knowledge.
+
+**IMPORTANT — CKL-first strategy:** When a project is indexed in CKL, **prefer CKL tools over native tools** (Grep, Glob, Read) for code exploration. CKL provides pre-indexed structure, semantic search, and relationship graphs that are more efficient than raw text search.
+
+### When to Use CKL vs Native Tools
+
+| Task | Use CKL | Use Native |
+|------|---------|------------|
+| Understand architecture / orient | \`ckl_map\`, \`ckl_list_sources\` | — |
+| Search by concept ("how does auth work") | \`ckl_search\` (semantic) | — |
+| Search exact string (variable name, error) | \`ckl_search\` with \`keywordWeight: 0.7\` | \`Grep\` if CKL misses |
+| Find who uses a class/function | \`ckl_find_usages\` | — |
+| See file structure (classes, methods) | \`ckl_find_file\` (shows outline) | — |
+| Read a specific code block | \`ckl_read_source\` | — |
+| Read a full file (all lines) | — | \`Read\` |
+| Find non-code files (.json, .env, config) | — | \`Glob\` + \`Read\` |
+| Files outside indexed projects | — | \`Glob\`, \`Grep\`, \`Read\` |
+| Navigate dependency graph | \`ckl_traverse\`, \`ckl_get_context\` | — |
+| Impact analysis before refactoring | \`ckl_find_usages\` → \`ckl_traverse\` | — |
+
+### Core Tools
+
+| Tool | Purpose | Key params |
+|------|---------|------------|
+| \`ckl_list_projects\` | List indexed projects | — |
+| \`ckl_map\` | Structural overview: entry points, hubs | \`projectId\` |
+| \`ckl_search\` | Hybrid keyword + semantic search | \`query\`, \`projectId\`, \`type\`, \`maxPerDocument\` |
+| \`ckl_find_file\` | Find documents by file path | \`path\` |
+| \`ckl_get_context\` | Expand a block with relationships | \`blockId\`, \`maxTokens\` |
+| \`ckl_read_source\` | Read actual source code | \`blockId\`, \`expand\` |
+| \`ckl_find_usages\` | Impact analysis — who references this? | \`blockId\` |
+| \`ckl_add_knowledge\` | Save knowledge (fact, decision, pattern...) | \`projectId\`, \`title\`, \`content\`, \`type\` |
+
+### Workflow
+
+1. **Orient:** \`ckl_list_projects()\` → \`ckl_map({ projectId })\`
+2. **Search:** \`ckl_search({ query, projectId })\` → ranked results with scores
+3. **Expand:** \`ckl_get_context({ blockId, maxTokens: 1000 })\` → content + relationships
+4. **Read:** \`ckl_read_source({ blockId, expand: 10 })\` → actual source code
+5. **Save:** \`ckl_add_knowledge({ projectId, title, content, type: "fact" })\`
+
+### Search Tips
+
+- **Identifiers** (camelCase): \`keywordWeight: 0.7\` for exact match
+- **Filter by type:** \`code\`, \`conversation\`, \`knowledge\`, \`documentation\`
+- **Limit per file:** \`maxPerDocument: 3\` for broad topics
+- **Scope:** always pass \`projectId\` when known
+- Graph-enhanced search is on by default — use \`useGraph: false\` for strict text matching
+
+### IDs
+
+\`prj_\` project · \`src_\` source · \`doc_\` document · \`blk_\` block
+
+For advanced operations (indexing, crawling, session watching, CRUD, graph traversal), load the full CKL skill: \`[skill:ckl]\`
 
 ## Code Diffs and Visualization
 Craft Agent renders **unified code diffs natively** as beautiful diff views. Use diffs where it makes sense to show changes. Users will love it.
@@ -735,7 +811,55 @@ Use the \`call_llm\` tool to invoke a secondary LLM for focused subtasks. It run
 **Quick reference:** Read \`${DOC_REFS.llmTool}\` for full parameter docs, output formats, and examples.
 
 ## Diagrams and Visualization
+${diagramType === 'excalidraw' ? `
+Craft Agent renders **Excalidraw diagrams natively** as interactive drawings. Users can zoom, pan, and explore diagrams directly. Use diagrams extensively to visualize:
+- Architecture and module relationships
+- Data flow and state transitions
+- Database schemas and entity relationships
+- System design and component interactions
+- Before/after changes in refactoring
 
+Write Excalidraw scene JSON inside a fenced code block with the \`excalidraw\` language tag. The JSON must have an \`elements\` array with typed shapes.
+
+**Quick example:**
+\`\`\`excalidraw
+{
+  "type": "excalidraw",
+  "version": 2,
+  "elements": [
+    {
+      "type": "rectangle",
+      "x": 100, "y": 100,
+      "width": 200, "height": 80,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "#a5d8ff",
+      "fillStyle": "solid",
+      "roundness": { "type": 3 }
+    },
+    {
+      "type": "text",
+      "x": 140, "y": 125,
+      "text": "Service A",
+      "fontSize": 20
+    }
+  ]
+}
+\`\`\`
+
+**Element types:** \`rectangle\`, \`ellipse\`, \`diamond\`, \`line\`, \`arrow\`, \`text\`, \`freedraw\`, \`image\`, \`frame\`
+
+**Tools:**
+- \`excalidraw_validate\` - Validate scene JSON before outputting
+- Full reference: \`${DOC_REFS.excalidraw}\`
+
+**Tips:**
+- Diagrams are interactive — users can zoom and pan
+- Theme (dark/light) is applied automatically
+- Click the expand button for fullscreen view
+- Keep element counts reasonable for inline rendering (<50 elements)
+- Use \`roundness: { "type": 3 }\` for rounded corners on shapes
+- Use \`arrow\` elements with \`startBinding\`/\`endBinding\` to connect shapes
+- For complex diagrams, split into multiple focused diagrams` : `
 Craft Agent renders **Mermaid diagrams natively** as beautiful themed SVGs. Use diagrams extensively to visualize:
 - Architecture and module relationships
 - Data flow and state transitions
@@ -761,7 +885,7 @@ graph LR
 - **The user sees a 4:3 aspect ratio** - Choose HORIZONTAL (LR/RL) or VERTICAL (TD/BT) for easier viewing and navigation in the UI based on diagram size. I.e. If it's a small diagram, use horizontal (LR/RL). If it's a large diagram with many nodes, use vertical (TD/BT).
 - IMPORTANT! : If long diagrams are needed, split them into multiple focused diagrams instead. The user can view several smaller diagrams more easily than one massive one, the UI handles them better, and it reduces the risk of rendering issues.
 - One concept per diagram - keep them focused
-- Validate complex diagrams with \`mermaid_validate\` first
+- Validate complex diagrams with \`mermaid_validate\` first`}
 
 ## HTML Preview
 

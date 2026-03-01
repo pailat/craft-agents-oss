@@ -774,6 +774,15 @@ export const IPC_CHANNELS = {
   // Session content search (full-text via ripgrep)
   SEARCH_SESSIONS: 'sessions:searchContent',
 
+  // Notes (workspace-scoped)
+  NOTES_GET: 'notes:get',
+  NOTES_GET_ONE: 'notes:getOne',
+  NOTES_SAVE: 'notes:save',
+  NOTES_CREATE: 'notes:create',
+  NOTES_DELETE: 'notes:delete',
+  NOTES_OPEN_FINDER: 'notes:openFinder',
+  NOTES_CHANGED: 'notes:changed',
+
   // Skills (workspace-scoped)
   SKILLS_GET: 'skills:get',
   SKILLS_GET_FILES: 'skills:getFiles',
@@ -1126,6 +1135,15 @@ export interface ElectronAPI {
   // Skills change listener (live updates when skills are added/removed/modified)
   onSkillsChanged(callback: (skills: LoadedSkill[]) => void): () => void
 
+  // Notes (workspace-scoped)
+  getNotes(workspaceId: string): Promise<import('@craft-agent/shared/notes').LoadedNote[]>
+  getNote(workspaceId: string, noteId: string): Promise<import('@craft-agent/shared/notes').LoadedNote | null>
+  saveNote(workspaceId: string, note: { id: string; title: string; content: Record<string, unknown>; markdown: string; tags?: string[]; convertedToSessionId?: string }): Promise<void>
+  createNote(workspaceId: string, title?: string): Promise<import('@craft-agent/shared/notes').LoadedNote>
+  deleteNote(workspaceId: string, noteId: string): Promise<boolean>
+  openNoteInFinder(workspaceId: string, noteId: string): Promise<void>
+  onNotesChanged(callback: (notes: import('@craft-agent/shared/notes').LoadedNote[]) => void): () => void
+
   // Statuses (workspace-scoped)
   listStatuses(workspaceId: string): Promise<import('@craft-agent/shared/statuses').StatusConfig[]>
   reorderStatuses(workspaceId: string, orderedIds: string[]): Promise<void>
@@ -1420,6 +1438,17 @@ export interface SkillsNavigationState {
 }
 
 /**
+ * Notes navigation state - shows NotesListPanel in navigator
+ */
+export interface NotesNavigationState {
+  navigator: 'notes'
+  /** Selected note details or null for empty state */
+  details: { type: 'note'; noteId: string } | null
+  /** Optional right sidebar panel state */
+  rightSidebar?: RightSidebarPanel
+}
+
+/**
  * Automations navigation state - shows AutomationsListPanel in navigator
  */
 export interface AutomationsNavigationState {
@@ -1445,6 +1474,7 @@ export type NavigationState =
   | SourcesNavigationState
   | SettingsNavigationState
   | SkillsNavigationState
+  | NotesNavigationState
   | AutomationsNavigationState
 
 /**
@@ -1474,6 +1504,13 @@ export const isSettingsNavigation = (
 export const isSkillsNavigation = (
   state: NavigationState
 ): state is SkillsNavigationState => state.navigator === 'skills'
+
+/**
+ * Type guard to check if state is notes navigation
+ */
+export const isNotesNavigation = (
+  state: NavigationState
+): state is NotesNavigationState => state.navigator === 'notes'
 
 /**
  * Type guard to check if state is automations navigation
@@ -1506,6 +1543,12 @@ export const getNavigationStateKey = (state: NavigationState): string => {
       return `skills/skill/${state.details.skillSlug}`
     }
     return 'skills'
+  }
+  if (state.navigator === 'notes') {
+    if (state.details?.type === 'note') {
+      return `notes/note/${state.details.noteId}`
+    }
+    return 'notes'
   }
   if (state.navigator === 'automations') {
     if (state.details?.type === 'automation') {
@@ -1552,6 +1595,16 @@ export const parseNavigationStateKey = (key: string): NavigationState | null => 
       return { navigator: 'skills', details: { type: 'skill', skillSlug } }
     }
     return { navigator: 'skills', details: null }
+  }
+
+  // Handle notes
+  if (key === 'notes') return { navigator: 'notes', details: null }
+  if (key.startsWith('notes/note/')) {
+    const noteId = key.slice(11)
+    if (noteId) {
+      return { navigator: 'notes', details: { type: 'note', noteId } }
+    }
+    return { navigator: 'notes', details: null }
   }
 
   // Handle automations
