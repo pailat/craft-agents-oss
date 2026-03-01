@@ -20,7 +20,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react'
-import { isEmoji } from '@craft-agent/shared/utils/icon-constants'
+import { isEmoji, isLucideIconName } from '@craft-agent/shared/utils/icon-constants'
 import type { ResolvedEntityIcon } from '@craft-agent/shared/icons'
 
 // ============================================================================
@@ -495,6 +495,7 @@ export interface UseEntityIconOptions {
   iconDir?: string
   /**
    * Icon value from entity config. Can be:
+   * - Lucide icon name (e.g. "globe", "arrow-right") → resolved as lucide
    * - Emoji string (e.g. "🔧") → resolved as emoji
    * - URL (ignored here, assumed already downloaded to local file)
    * - undefined → auto-discover from iconDir
@@ -515,11 +516,12 @@ export interface UseEntityIconOptions {
  * and emoji detection. Returns a ResolvedEntityIcon ready for EntityIcon rendering.
  *
  * Resolution priority (config iconValue is the source of truth):
- * 1. Emoji in iconValue → { kind: 'emoji', value: emoji, colorable: false }
- * 2. URL in iconValue → { kind: 'file', value: url, colorable: false }
- * 3. Local file (iconPath) → { kind: 'file', value: dataUrl, colorable }
- * 4. Auto-discover in iconDir (only when iconValue is undefined) → { kind: 'file', value: dataUrl, colorable }
- * 5. Fallback → { kind: 'fallback', colorable: false }
+ * 1. Lucide name in iconValue → { kind: 'lucide', value: name, colorable: true }
+ * 2. Emoji in iconValue → { kind: 'emoji', value: emoji, colorable: false }
+ * 3. URL in iconValue → { kind: 'file', value: url, colorable: false }
+ * 4. Local file (iconPath) → { kind: 'file', value: dataUrl, colorable }
+ * 5. Auto-discover in iconDir (only when iconValue is undefined) → { kind: 'file', value: dataUrl, colorable }
+ * 6. Fallback → { kind: 'fallback', colorable: false }
  *
  * Config takes precedence over auto-discovered local files.
  *
@@ -533,10 +535,12 @@ export function useEntityIcon(opts: UseEntityIconOptions): ResolvedEntityIcon {
   // Stable cache key for this entity's icon
   const cacheKey = `${entityType}:${workspaceId}:${identifier}`
 
-  // Check if iconValue is an emoji or URL (synchronous, no loading needed)
+  // Check if iconValue is a Lucide name, emoji, or URL (synchronous, no loading needed)
   const immediateValue = useMemo(() => {
     // Guard against non-string values (can happen with malformed config data)
     if (!iconValue || typeof iconValue !== 'string') return null
+    // Lucide icon names are checked first (kebab-case ASCII, e.g. "globe", "arrow-right")
+    if (isLucideIconName(iconValue)) return { type: 'lucide' as const, value: iconValue }
     if (isEmoji(iconValue)) return { type: 'emoji' as const, value: iconValue }
     if (iconValue.startsWith('http://') || iconValue.startsWith('https://')) {
       return { type: 'url' as const, value: iconValue }
@@ -544,8 +548,12 @@ export function useEntityIcon(opts: UseEntityIconOptions): ResolvedEntityIcon {
     return null
   }, [iconValue])
 
-  // Initial state: check cache synchronously or return emoji/url/fallback
+  // Initial state: check cache synchronously or return lucide/emoji/url/fallback
   const [resolved, setResolved] = useState<ResolvedEntityIcon>(() => {
+    if (immediateValue?.type === 'lucide') {
+      // Lucide icons are always colorable (they use currentColor via stroke)
+      return { kind: 'lucide', value: immediateValue.value, colorable: true }
+    }
     if (immediateValue?.type === 'emoji') {
       return { kind: 'emoji', value: immediateValue.value, colorable: false }
     }
@@ -568,6 +576,12 @@ export function useEntityIcon(opts: UseEntityIconOptions): ResolvedEntityIcon {
   })
 
   useEffect(() => {
+    // If Lucide icon name, no file loading needed - resolve synchronously
+    if (immediateValue?.type === 'lucide') {
+      setResolved({ kind: 'lucide', value: immediateValue.value, colorable: true })
+      return
+    }
+
     // If emoji, no file loading needed - just update state
     if (immediateValue?.type === 'emoji') {
       setResolved({ kind: 'emoji', value: immediateValue.value, colorable: false })

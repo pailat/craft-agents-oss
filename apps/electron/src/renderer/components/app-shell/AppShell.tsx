@@ -32,6 +32,7 @@ import {
   Bot,
   Info,
   Webhook,
+  StickyNote,
 } from "lucide-react"
 import { PanelRightRounded } from "../icons/PanelRightRounded"
 import { PanelLeftRounded } from "../icons/PanelLeftRounded"
@@ -88,9 +89,12 @@ import { useFocusContext } from "@/context/FocusContext"
 import { getSessionTitle } from "@/utils/session"
 import { useSetAtom } from "jotai"
 import type { Session, Workspace, FileAttachment, PermissionRequest, LoadedSource, LoadedSkill, PermissionMode, SourceFilter, AutomationFilter } from "../../../shared/types"
+import { PERMISSION_MODE_ORDER } from "@craft-agent/shared/agent/modes"
 import { sessionMetaMapAtom, type SessionMeta } from "@/atoms/sessions"
 import { sourcesAtom } from "@/atoms/sources"
 import { skillsAtom } from "@/atoms/skills"
+import { notesAtom } from "@/atoms/notes"
+import type { LoadedNote } from '@craft-agent/shared/notes'
 import { type SessionStatusId, type SessionStatus, statusConfigsToSessionStatuses } from "@/config/session-status-config"
 import { useStatuses } from "@/hooks/useStatuses"
 import { useLabels } from "@/hooks/useLabels"
@@ -110,6 +114,7 @@ import {
   isSourcesNavigation,
   isSettingsNavigation,
   isSkillsNavigation,
+  isNotesNavigation,
   isAutomationsNavigation,
   type NavigationState,
   type SessionFilter,
@@ -117,6 +122,7 @@ import {
 import type { SettingsSubpage } from "../../../shared/types"
 import { SourcesListPanel } from "./SourcesListPanel"
 import { SkillsListPanel } from "./SkillsListPanel"
+import { NotesListPanel } from "./NotesListPanel"
 import { AutomationsListPanel } from "../automations/AutomationsListPanel"
 import { APP_EVENTS, AGENT_EVENTS, type AutomationFilterKind, AUTOMATION_TYPE_TO_FILTER_KIND } from "../automations/types"
 import { useAutomations } from "@/hooks/useAutomations"
@@ -768,6 +774,14 @@ function AppShellContent({
   React.useEffect(() => {
     setSkillsAtom(skills)
   }, [skills, setSkillsAtom])
+  // Notes state (workspace-scoped)
+  const [notes, setNotes] = React.useState<LoadedNote[]>([])
+  // Sync notes to atom
+  const setNotesAtom = useSetAtom(notesAtom)
+  React.useEffect(() => {
+    setNotesAtom(notes)
+  }, [notes, setNotesAtom])
+
   // Automations — state, handlers, loading, subscriptions
   const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId)
   const {
@@ -781,7 +795,7 @@ function AppShellContent({
   const [localMcpEnabled, setLocalMcpEnabled] = React.useState(true)
 
   // Enabled permission modes for Shift+Tab cycling (min 2 modes)
-  const [enabledModes, setEnabledModes] = React.useState<PermissionMode[]>(['safe', 'ask', 'allow-all'])
+  const [enabledModes, setEnabledModes] = React.useState<PermissionMode[]>(PERMISSION_MODE_ORDER)
 
   // Load workspace settings (for localMcpEnabled and cyclablePermissionModes) on workspace change
   React.useEffect(() => {
@@ -861,6 +875,14 @@ function AppShellContent({
   React.useEffect(() => {
     const cleanup = window.electronAPI.onSkillsChanged((updatedSkills) => {
       setSkills(updatedSkills || [])
+    })
+    return cleanup
+  }, [])
+
+  // Subscribe to live note updates (when notes are added/removed/modified)
+  React.useEffect(() => {
+    const cleanup = window.electronAPI.onNotesChanged((updatedNotes) => {
+      setNotes(updatedNotes || [])
     })
     return cleanup
   }, [])
@@ -1041,7 +1063,7 @@ function AppShellContent({
       const currentOptions = contextValue.sessionOptions.get(session.selected)
       const currentMode = currentOptions?.permissionMode ?? 'ask'
       // Cycle through enabled permission modes
-      const modes = enabledModes.length >= 2 ? enabledModes : ['safe', 'ask', 'allow-all'] as PermissionMode[]
+      const modes = enabledModes.length >= 2 ? enabledModes : PERMISSION_MODE_ORDER
       const currentIndex = modes.indexOf(currentMode)
       // If current mode not in enabled list, jump to first enabled mode
       const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % modes.length
@@ -1232,6 +1254,16 @@ function AppShellContent({
       console.error('[Chat] Failed to load skills:', err)
     })
   }, [activeWorkspaceId, activeSessionWorkingDirectory])
+
+  // Load notes for workspace
+  React.useEffect(() => {
+    if (!activeWorkspaceId) return
+    window.electronAPI.getNotes(activeWorkspaceId).then((loaded) => {
+      setNotes(loaded || [])
+    }).catch(err => {
+      console.error('[Chat] Failed to load notes:', err)
+    })
+  }, [activeWorkspaceId])
 
   // Filter session metadata by active workspace
   // Also exclude hidden sessions (mini-agent sessions) from all counts and lists
@@ -1621,6 +1653,46 @@ function AppShellContent({
     navigate(routes.view.skills())
   }, [])
 
+  // Handlers for notes view
+  const handleNotesClick = useCallback(() => {
+    navigate(routes.view.notes())
+  }, [])
+
+  const handleNoteSelect = React.useCallback((note: LoadedNote) => {
+    if (!activeWorkspaceId) return
+    navigate(routes.view.notes(note.id))
+  }, [activeWorkspaceId, navigate])
+
+  const handleCreateNote = React.useCallback(async () => {
+    if (!activeWorkspaceId) return
+    try {
+      const note = await window.electronAPI.createNote(activeWorkspaceId)
+      navigate(routes.view.notes(note.id))
+    } catch (error) {
+      console.error('[Chat] Failed to create note:', error)
+      toast.error('Failed to create note')
+    }
+  }, [activeWorkspaceId, navigate])
+
+  const handleDeleteNote = useCallback(async (noteId: string) => {
+    if (!activeWorkspace) return
+    try {
+      await window.electronAPI.deleteNote(activeWorkspace.id, noteId)
+      toast.success('Note deleted')
+      // Navigate to notes list if the deleted note was selected
+      if (isNotesNavigation(navState) && navState.details?.noteId === noteId) {
+        navigate(routes.view.notes())
+      }
+    } catch (error) {
+      console.error('[Chat] Failed to delete note:', error)
+      toast.error('Failed to delete note')
+    }
+  }, [activeWorkspace, navState, navigate])
+
+  const handleConvertNoteToSession = React.useCallback((noteId: string, noteTitle: string, markdown: string) => {
+    navigate(routes.action.newSession({ input: markdown, name: noteTitle, send: true }))
+  }, [navigate])
+
   // Handlers for automations view
   const handleAutomationsClick = useCallback(() => {
     navigate(routes.view.automations())
@@ -1868,12 +1940,13 @@ function AppShellContent({
     // 3. Sources, Skills, Settings
     result.push({ id: 'nav:sources', type: 'nav', action: handleSourcesClick })
     result.push({ id: 'nav:skills', type: 'nav', action: handleSkillsClick })
+    result.push({ id: 'nav:notes', type: 'nav', action: handleNotesClick })
     result.push({ id: 'nav:automations', type: 'nav', action: handleAutomationsClick })
     result.push({ id: 'nav:settings', type: 'nav', action: () => handleSettingsClick('app') })
     result.push({ id: 'nav:whats-new', type: 'nav', action: handleWhatsNewClick })
 
     return result
-  }, [handleAllSessionsClick, handleFlaggedClick, handleArchivedClick, handleSessionStatusClick, effectiveSessionStatuses, handleLabelClick, labelConfigs, labelTree, viewConfigs, handleViewClick, handleSourcesClick, handleSkillsClick, handleAutomationsClick, handleSettingsClick, handleWhatsNewClick])
+  }, [handleAllSessionsClick, handleFlaggedClick, handleArchivedClick, handleSessionStatusClick, effectiveSessionStatuses, handleLabelClick, labelConfigs, labelTree, viewConfigs, handleViewClick, handleSourcesClick, handleSkillsClick, handleNotesClick, handleAutomationsClick, handleSettingsClick, handleWhatsNewClick])
 
   // Toggle folder expanded state
   const handleToggleFolder = React.useCallback((path: string) => {
@@ -1990,6 +2063,11 @@ function AppShellContent({
     // Skills navigator
     if (isSkillsNavigation(navState)) {
       return 'All Skills'
+    }
+
+    // Notes navigator
+    if (isNotesNavigation(navState)) {
+      return 'Notes'
     }
 
     // Tasks navigator
@@ -2342,6 +2420,14 @@ function AppShellContent({
                         type: 'skills',
                         onAddSkill: openAddSkill,
                       },
+                    },
+                    {
+                      id: "nav:notes",
+                      title: "Notes",
+                      label: String(notes.length),
+                      icon: StickyNote,
+                      variant: isNotesNavigation(navState) ? "default" : "ghost",
+                      onClick: handleNotesClick,
                     },
                     {
                       id: "nav:automations",
@@ -3106,6 +3192,14 @@ function AppShellContent({
                       {...getEditConfig('add-skill', activeWorkspace.rootPath)}
                     />
                   )}
+                  {/* New Note button (only for notes mode) */}
+                  {isNotesNavigation(navState) && activeWorkspaceId && (
+                    <HeaderIconButton
+                      icon={<Plus className="h-4 w-4" />}
+                      tooltip="New Note"
+                      onClick={handleCreateNote}
+                    />
+                  )}
                   {/* Add Automation button (only for tasks mode) */}
                   {isAutomationsNavigation(navState) && activeWorkspace && (
                     <EditPopover
@@ -3143,6 +3237,17 @@ function AppShellContent({
                 onSkillClick={handleSkillSelect}
                 onDeleteSkill={handleDeleteSkill}
                 selectedSkillSlug={isSkillsNavigation(navState) && navState.details?.type === 'skill' ? navState.details.skillSlug : null}
+              />
+            )}
+            {isNotesNavigation(navState) && activeWorkspaceId && (
+              /* Notes List */
+              <NotesListPanel
+                notes={notes}
+                onNoteClick={handleNoteSelect}
+                onDeleteNote={handleDeleteNote}
+                selectedNoteId={isNotesNavigation(navState) && navState.details?.type === 'note' ? navState.details.noteId : null}
+                workspaceId={activeWorkspaceId}
+                onCreateNote={handleCreateNote}
               />
             )}
             {isAutomationsNavigation(navState) && (

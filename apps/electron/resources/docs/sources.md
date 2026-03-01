@@ -53,7 +53,7 @@ Based on research and user intent, create `config.json` with **ALL required fiel
 **Required fields:**
 - `id` - **REQUIRED**: Unique identifier string. Format: `{slug}_{random}` (e.g., `linear_a1b2c3d4`). Generate the random part with any method (e.g., 8 hex chars).
 - `name`, `slug`, `provider`, `type` - Basic identification
-- `icon` - **REQUIRED**: URL to the service's favicon, logo, or app icon. Search the web to find an appropriate icon that looks like an app icon. The icon is auto-downloaded and cached locally. Use an emoji as fallback.
+- `icon` - **REQUIRED**: Lucide icon name (e.g., `"globe"`, `"database"`, `"git-branch"`), URL to the service's favicon/logo, or emoji as fallback. Prefer Lucide names for visual consistency. Browse icons at https://lucide.dev/icons. URLs are auto-downloaded and cached locally.
 - `tagline` - **REQUIRED**: Short description for agent context (e.g., "Issue tracking, sprint planning, and project management")
 - Type-specific config (`mcp`, `api`, or `local`)
 - Authentication method appropriate for the service
@@ -232,13 +232,20 @@ Each source folder contains:
   "type": "mcp" | "api" | "local",
 
   // REQUIRED: Icon and tagline for UI and agent context
-  "icon": "https://example.com/favicon.ico",  // URL (auto-downloaded) or emoji
+  "icon": "globe",  // Lucide name, URL (auto-downloaded), or emoji
   "tagline": "Brief description for agent context",
 
   // For MCP sources:
   "mcp": {
     "url": "https://mcp.example.com",
-    "authType": "oauth" | "bearer" | "none"
+    "authType": "oauth" | "bearer" | "none",
+    // Stdio-only fields:
+    "transport": "stdio",           // "http" | "sse" | "stdio"
+    "command": "npx",               // Executable to run
+    "args": ["-y", "my-server"],    // Command arguments
+    "env": { "KEY": "value" },      // Environment variables
+    "cwd": "/path/to/project",      // Working directory
+    "requiredPermissions": ["calendars"]  // macOS permissions needed
   },
 
   // For API sources:
@@ -261,9 +268,9 @@ Each source folder contains:
   "connectionStatus": "connected" | "needs_auth" | "failed" | "untested",
   "lastTestedAt": 1704067200000,
 
-  // Icon: emoji or URL (auto-downloaded to local icon.* file)
+  // Icon: Lucide name, emoji, or URL (auto-downloaded to local icon.* file)
   // Local icon files are auto-discovered, no config needed
-  "icon": "🔧",                      // Emoji icon (optional)
+  "icon": "wrench",                   // Lucide icon name (optional)
 
   // Timestamps:
   "createdAt": 1704067200000,
@@ -366,6 +373,32 @@ With environment variables:
   }
 }
 ```
+
+With working directory and macOS permissions:
+```json
+{
+  "type": "mcp",
+  "name": "EventKit",
+  "provider": "eventkit",
+  "mcp": {
+    "transport": "stdio",
+    "command": "/Users/me/.bun/bin/bun",
+    "args": ["src/index.ts"],
+    "cwd": "/path/to/mcp-server-eventkit",
+    "authType": "none",
+    "requiredPermissions": ["calendars", "reminders"]
+  }
+}
+```
+
+**Stdio fields:**
+- `command` (required): Executable to run
+- `args` (optional): Command-line arguments
+- `env` (optional): Environment variables for the subprocess
+- `cwd` (optional): Working directory for the subprocess. Required when the command needs to run from a specific directory (e.g., `bun src/index.ts` must run from the project root).
+- `requiredPermissions` (optional): macOS permissions the MCP server needs. When specified, Craft Agent shows actionable error messages if the app hasn't been granted these permissions in System Settings > Privacy & Security.
+
+**Available macOS permissions:** `calendars`, `reminders`, `contacts`, `photos`, `camera`, `microphone`, `location`, `documents-folder`, `desktop-folder`, `downloads-folder`
 
 ### API Sources
 
@@ -625,6 +658,7 @@ The `config.icon` field controls the source icon. Resolution follows this priori
 
 | `config.icon` value | Behavior |
 |---------------------|----------|
+| Lucide name (e.g., `"globe"`) | Rendered as Lucide React icon component |
 | Emoji (e.g., `"🔧"`) | Rendered as emoji text |
 | Local path `"./icon.svg"` | Loads from `sources/{slug}/icon.svg` |
 | URL `"https://..."` | Auto-downloaded to local `icon.*` file by `source_test` |
@@ -633,6 +667,11 @@ The `config.icon` field controls the source icon. Resolution follows this priori
 **Examples:**
 
 ```json
+// Lucide icon name (recommended - consistent with app design system)
+{ "icon": "globe" }
+{ "icon": "database" }
+{ "icon": "git-branch" }
+
 // Emoji icon
 { "icon": "📝" }
 
@@ -646,7 +685,7 @@ The `config.icon` field controls the source icon. Resolution follows this priori
 {}
 ```
 
-**Best practice:** Set `icon` to a URL when creating a source. Run `source_test` to download and cache it locally. The app then uses the local file for fast, offline-capable display.
+**Best practice:** Use a Lucide icon name for visual consistency with the app's design system. Browse available icons at https://lucide.dev/icons. For branded sources, set `icon` to a URL and run `source_test` to download and cache it locally.
 
 ## Provider Domain Cache
 

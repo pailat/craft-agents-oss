@@ -51,6 +51,10 @@ export type { CredentialPromptArgs } from './credential-prompt.ts';
 export { handleUpdatePreferences } from './update-preferences.ts';
 export type { UpdatePreferencesArgs } from './update-preferences.ts';
 
+// Set Session Status
+export { handleSetSessionStatus } from './set-session-status.ts';
+export type { SetSessionStatusArgs } from './set-session-status.ts';
+
 // Transform Data
 export { handleTransformData } from './transform-data.ts';
 export type { TransformDataArgs } from './transform-data.ts';

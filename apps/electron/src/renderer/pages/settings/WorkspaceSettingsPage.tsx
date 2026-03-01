@@ -23,7 +23,7 @@ import { routes } from '@/lib/navigate'
 import { Spinner } from '@craft-agent/ui'
 import { RenameDialog } from '@/components/ui/rename-dialog'
 import type { PermissionMode, WorkspaceSettings, LoadedSource } from '../../../shared/types'
-import { PERMISSION_MODE_CONFIG } from '@craft-agent/shared/agent/mode-types'
+import { PERMISSION_MODE_CONFIG, PERMISSION_MODE_ORDER } from '@craft-agent/shared/agent/mode-types'
 import type { DetailsPageMeta } from '@/lib/navigation-registry'
 import { SourceAvatar } from '@/components/ui/source-avatar'
 
@@ -66,7 +66,7 @@ export default function WorkspaceSettingsPage() {
   const [enabledSourceSlugs, setEnabledSourceSlugs] = useState<string[]>([])
 
   // Mode cycling state
-  const [enabledModes, setEnabledModes] = useState<PermissionMode[]>(['safe', 'ask', 'allow-all'])
+  const [enabledModes, setEnabledModes] = useState<PermissionMode[]>(PERMISSION_MODE_ORDER)
   const [modeCyclingError, setModeCyclingError] = useState<string | null>(null)
 
   // Load workspace settings when active workspace changes
@@ -425,11 +425,11 @@ export default function WorkspaceSettingsPage() {
                   description="Control what AI can do"
                   value={permissionMode}
                   onValueChange={(v) => handlePermissionModeChange(v as PermissionMode)}
-                  options={[
-                    { value: 'safe', label: PERMISSION_MODE_CONFIG['safe'].shortName, description: 'Read-only, no changes allowed' },
-                    { value: 'ask', label: PERMISSION_MODE_CONFIG['ask'].shortName, description: 'Prompts before making edits' },
-                    { value: 'allow-all', label: PERMISSION_MODE_CONFIG['allow-all'].shortName, description: 'Full autonomous execution' },
-                  ]}
+                  options={PERMISSION_MODE_ORDER.map(m => ({
+                    value: m,
+                    label: PERMISSION_MODE_CONFIG[m].shortName,
+                    description: PERMISSION_MODE_CONFIG[m].description,
+                  }))}
                 />
               </SettingsCard>
             </SettingsSection>
@@ -440,7 +440,7 @@ export default function WorkspaceSettingsPage() {
               description="Select which modes to cycle through with Shift+Tab"
             >
               <SettingsCard>
-                {(['safe', 'ask', 'allow-all'] as const).map((m) => {
+                {(PERMISSION_MODE_ORDER).map((m) => {
                   const config = PERMISSION_MODE_CONFIG[m]
                   const isEnabled = enabledModes.includes(m)
                   return (

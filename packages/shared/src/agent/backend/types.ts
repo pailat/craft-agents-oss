@@ -254,8 +254,10 @@ export type SdkMcpServerConfig =
       env?: Record<string, string>;
       /** Environment variable names to forward from parent process (Codex-specific) */
       envVars?: string[];
-      /** Working directory for the server process (Codex-specific) */
+      /** Working directory for the server process */
       cwd?: string;
+      /** macOS permissions required by this server (for helpful error messages on failure) */
+      requiredPermissions?: string[];
     };
 
 /**
@@ -511,6 +513,9 @@ export interface AgentBackend {
 
   /** Called when agent requests spawning a sub-session */
   onSpawnSession: ((request: import('../base-agent.ts').SpawnSessionRequest) => Promise<import('../base-agent.ts').SpawnSessionResult>) | null;
+
+  /** Called when agent changes session status via set_session_status tool */
+  onStatusChanged: ((statusId: string) => void) | null;
 }
 
 /**

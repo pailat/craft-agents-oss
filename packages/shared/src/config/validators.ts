@@ -361,9 +361,16 @@ import { getWorkspaceSourcesPath } from '../workspaces/storage.ts';
 
 const SourceTypeSchema = z.enum(['mcp', 'api', 'local']);
 
+// macOS TCC permissions that an MCP server may declare
+const MacPermissionSchema = z.enum([
+  'calendars', 'reminders', 'contacts', 'photos',
+  'camera', 'microphone', 'location',
+  'documents-folder', 'desktop-folder', 'downloads-folder',
+]);
+
 // MCP source supports two transport types:
 // - HTTP/SSE: requires url and authType
-// - Stdio: requires command (and optional args, env)
+// - Stdio: requires command (and optional args, env, cwd)
 const McpSourceConfigSchema = z.object({
   transport: z.enum(['http', 'sse', 'stdio']).optional(),
   // HTTP/SSE fields
@@ -374,6 +381,9 @@ const McpSourceConfigSchema = z.object({
   command: z.string().optional(),
   args: z.array(z.string()).optional(),
   env: z.record(z.string(), z.string()).optional(),
+  cwd: z.string().optional(),
+  // macOS permissions required by this MCP server (for helpful error messages)
+  requiredPermissions: z.array(MacPermissionSchema).optional(),
 }).refine(
   (data) => {
     if (data.transport === 'stdio') {

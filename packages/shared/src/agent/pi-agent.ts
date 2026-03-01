@@ -1131,6 +1131,7 @@ export class PiAgent extends BaseAgent {
         onPlanSubmitted: (planPath) => this.onPlanSubmitted?.(planPath),
         onAuthRequest: (request) => this.onAuthRequest?.(request),
         queryFn: (request) => this.queryLlm(request),
+        onSessionStatusChanged: (statusId) => this.onStatusChanged?.(statusId),
       });
     }
 

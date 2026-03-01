@@ -2376,6 +2376,7 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
           command: source.config.mcp.command,
           args: source.config.mcp.args,
           env: source.config.mcp.env,
+          cwd: source.config.mcp.cwd,
         })
       } else {
         // HTTP/SSE transport - connect to remote MCP server
@@ -2478,6 +2479,71 @@ export function registerIpcHandlers(sessionManager: SessionManager, windowManage
 
     searchLog.info('ipc:response', { searchId: id, resultCount: filteredResults.length, totalFound: results.length })
     return filteredResults
+  })
+
+  // ============================================================
+  // Notes (Workspace-scoped)
+  // ============================================================
+
+  // Get all notes for a workspace
+  ipcMain.handle(IPC_CHANNELS.NOTES_GET, async (_event, workspaceId: string) => {
+    ipcLog.info(`NOTES_GET: Loading notes for workspace: ${workspaceId}`)
+    const workspace = getWorkspaceByNameOrId(workspaceId)
+    if (!workspace) {
+      ipcLog.error(`NOTES_GET: Workspace not found: ${workspaceId}`)
+      return []
+    }
+    const { loadAllNotes } = await import('@craft-agent/shared/notes')
+    const notes = loadAllNotes(workspace.rootPath)
+    ipcLog.info(`NOTES_GET: Loaded ${notes.length} notes from ${workspace.rootPath}`)
+    return notes
+  })
+
+  // Get a single note
+  ipcMain.handle(IPC_CHANNELS.NOTES_GET_ONE, async (_event, workspaceId: string, noteId: string) => {
+    const workspace = getWorkspaceByNameOrId(workspaceId)
+    if (!workspace) throw new Error('Workspace not found')
+    const { loadNote } = await import('@craft-agent/shared/notes')
+    return loadNote(workspace.rootPath, noteId)
+  })
+
+  // Save a note (create or update)
+  ipcMain.handle(IPC_CHANNELS.NOTES_SAVE, async (_event, workspaceId: string, note: { id: string; title: string; content: Record<string, unknown>; markdown: string; tags?: string[]; convertedToSessionId?: string }) => {
+    const workspace = getWorkspaceByNameOrId(workspaceId)
+    if (!workspace) throw new Error('Workspace not found')
+    const { saveNote } = await import('@craft-agent/shared/notes')
+    saveNote(workspace.rootPath, note)
+    ipcLog.info(`NOTES_SAVE: Saved note ${note.id}`)
+  })
+
+  // Create a new note
+  ipcMain.handle(IPC_CHANNELS.NOTES_CREATE, async (_event, workspaceId: string, title?: string) => {
+    const workspace = getWorkspaceByNameOrId(workspaceId)
+    if (!workspace) throw new Error('Workspace not found')
+    const { createNote } = await import('@craft-agent/shared/notes')
+    const note = createNote(workspace.rootPath, title)
+    ipcLog.info(`NOTES_CREATE: Created note ${note.id}`)
+    return note
+  })
+
+  // Delete a note
+  ipcMain.handle(IPC_CHANNELS.NOTES_DELETE, async (_event, workspaceId: string, noteId: string) => {
+    const workspace = getWorkspaceByNameOrId(workspaceId)
+    if (!workspace) throw new Error('Workspace not found')
+    const { deleteNote } = await import('@craft-agent/shared/notes')
+    deleteNote(workspace.rootPath, noteId)
+    ipcLog.info(`NOTES_DELETE: Deleted note ${noteId}`)
+  })
+
+  // Open note folder in Finder/Explorer
+  ipcMain.handle(IPC_CHANNELS.NOTES_OPEN_FINDER, async (_event, workspaceId: string, noteId: string) => {
+    const workspace = getWorkspaceByNameOrId(workspaceId)
+    if (!workspace) throw new Error('Workspace not found')
+    const { join } = await import('path')
+    const { shell } = await import('electron')
+    const { getWorkspaceNotesPath } = await import('@craft-agent/shared/workspaces')
+    const noteDir = join(getWorkspaceNotesPath(workspace.rootPath), noteId)
+    await shell.showItemInFolder(noteDir)
   })
 
   // ============================================================

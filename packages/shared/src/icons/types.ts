@@ -14,11 +14,11 @@
 
 /**
  * Icon configuration as stored in entity config files.
- * The `icon` field can be an emoji string, an HTTP(S) URL, or undefined
- * (in which case local icon files are auto-discovered).
+ * The `icon` field can be a Lucide icon name, an emoji string,
+ * an HTTP(S) URL, or undefined (in which case local icon files are auto-discovered).
  */
 export interface IconConfig {
-  /** Emoji string, HTTP(S) URL, or undefined (auto-discover file) */
+  /** Lucide icon name (e.g. "globe"), emoji string, HTTP(S) URL, or undefined (auto-discover file) */
   icon?: string
 }
 
@@ -28,10 +28,11 @@ export interface IconConfig {
  */
 export interface ResolvedEntityIcon {
   /** The kind of icon that was resolved */
-  kind: 'emoji' | 'file' | 'fallback'
+  kind: 'emoji' | 'file' | 'fallback' | 'lucide'
   /**
    * For emoji: the emoji string (e.g. "🔧").
    * For file: data URL (base64-encoded image or themed SVG data URL).
+   * For lucide: the icon name (e.g. "globe", "arrow-right").
    * For fallback: undefined.
    */
   value?: string

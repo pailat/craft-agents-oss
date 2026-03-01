@@ -298,6 +298,14 @@ export interface SessionToolContext {
    */
   updatePreferences?(updates: Record<string, unknown>): void;
 
+  /**
+   * Update session status. Injected by each backend:
+   * - Claude: calls setSessionStatus() from sessions/storage.ts
+   * - Pi: calls setSessionStatus() from sessions/storage.ts
+   * Returns void on success, or { error: string } on failure.
+   */
+  setSessionStatus?(statusId: string): void | { error: string };
+
   // ============================================================
   // Session Paths (for transform_data / render_template)
   // ============================================================

@@ -455,6 +455,7 @@ export class ClaudeAgent extends BaseAgent {
       },
       queryFn: (request) => this.queryLlm(request),
       spawnSessionFn: (input) => this.preExecuteSpawnSession(input),
+      onSessionStatusChanged: (statusId) => this.onStatusChanged?.(statusId),
     });
 
     // Start config watcher for hot-reloading source changes

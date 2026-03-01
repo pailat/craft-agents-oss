@@ -60,6 +60,21 @@ mac:
   # The value must match --app-icon used in actool (see afterPack.js)
   extendInfo:
     CFBundleIconName: AppIcon
+    # === macOS TCC Privacy Descriptions ===
+    # These enable the system permission dialog when an MCP server
+    # accesses a protected resource. Harmless if unused — macOS only
+    # shows the dialog when the API is actually accessed.
+    NSCalendarsFullAccessUsageDescription: "Craft Agents needs access to your calendars to manage events through connected tools."
+    NSRemindersFullAccessUsageDescription: "Craft Agents needs access to your reminders to manage tasks through connected tools."
+    NSContactsUsageDescription: "Craft Agents needs access to your contacts through connected tools."
+    NSPhotoLibraryUsageDescription: "Craft Agents needs access to your photos through connected tools."
+    NSCameraUsageDescription: "Craft Agents needs camera access through connected tools."
+    NSMicrophoneUsageDescription: "Craft Agents needs microphone access through connected tools."
+    NSLocationUsageDescription: "Craft Agents needs location access through connected tools."
+    NSLocationWhenInUseUsageDescription: "Craft Agents needs location access through connected tools."
+    NSDocumentsFolderUsageDescription: "Craft Agents needs access to your Documents folder through connected tools."
+    NSDesktopFolderUsageDescription: "Craft Agents needs access to your Desktop folder through connected tools."
+    NSDownloadsFolderUsageDescription: "Craft Agents needs access to your Downloads folder through connected tools."
   target:
     - target: dmg
       arch:

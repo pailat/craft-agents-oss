@@ -30,6 +30,7 @@ import {
   isSettingsNavigation,
   isSkillsNavigation,
   isAutomationsNavigation,
+  isNotesNavigation,
 } from '@/contexts/NavigationContext'
 import { useSessionSelection, useIsMultiSelectActive, useSelectedIds, useSelectionCount } from '@/hooks/useSession'
 import { sourceSelection, skillSelection } from '@/hooks/useEntitySelection'
@@ -38,6 +39,9 @@ import type { SessionStatusId } from '@/config/session-status-config'
 import { SourceInfoPage, ChatPage } from '@/pages'
 import SkillInfoPage from '@/pages/SkillInfoPage'
 import { getSettingsPageComponent } from '@/pages/settings/settings-pages'
+import NoteEditorPage from '@/pages/NoteEditorPage'
+import { navigate, routes } from '@/lib/navigate'
+import { toast } from 'sonner'
 import { AutomationInfoPage } from '../automations/AutomationInfoPage'
 import type { ExecutionEntry } from '../automations/types'
 import { automationsAtom } from '@/atoms/automations'
@@ -254,6 +258,41 @@ export function MainContentPanel({
       <Panel variant="grow" className={className}>
         <div className="flex items-center justify-center h-full text-muted-foreground">
           <p className="text-sm">No skills configured</p>
+        </div>
+      </Panel>
+    )
+  }
+
+  // Notes navigator - show note editor or empty state
+  if (isNotesNavigation(navState)) {
+    if (navState.details?.type === 'note') {
+      return wrapWithStoplight(
+        <Panel variant="grow" className={className}>
+          <NoteEditorPage
+            noteId={navState.details.noteId}
+            workspaceId={activeWorkspaceId || ''}
+            onConvertToSession={(_noteId, noteTitle, markdown) => {
+              navigate(routes.action.newSession({ input: markdown, name: noteTitle, send: true }))
+            }}
+            onDelete={async (noteId) => {
+              if (!activeWorkspaceId) return
+              try {
+                await window.electronAPI.deleteNote(activeWorkspaceId, noteId)
+                toast.success('Note deleted')
+                navigate(routes.view.notes())
+              } catch {
+                toast.error('Failed to delete note')
+              }
+            }}
+          />
+        </Panel>
+      )
+    }
+    // No note selected - empty state
+    return wrapWithStoplight(
+      <Panel variant="grow" className={className}>
+        <div className="flex items-center justify-center h-full text-muted-foreground">
+          <p className="text-sm">Select a note or create a new one</p>
         </div>
       </Panel>
     )

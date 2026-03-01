@@ -79,6 +79,7 @@ import { evaluateAutoLabels } from '@craft-agent/shared/labels/auto'
 import { listLabels } from '@craft-agent/shared/labels/storage'
 import { extractLabelId } from '@craft-agent/shared/labels'
 import { AutomationSystem, AUTOMATIONS_HISTORY_FILE, type AutomationSystemMetadataSnapshot } from '@craft-agent/shared/automations'
+import { loadStatusConfig } from '@craft-agent/shared/statuses'
 
 // Import and re-export (extracted to avoid Electron dependency in tests)
 import { sanitizeForTitle } from './title-sanitizer'
@@ -896,6 +897,18 @@ export class SessionManager {
         const skills = loadAllSkills(workspaceRootPath)
         this.broadcastSkillsChanged(skills)
       },
+      onNotesListChange: async () => {
+        sessionLog.info(`Notes list changed in ${workspaceRootPath}`)
+        const { loadAllNotes } = await import('@craft-agent/shared/notes')
+        const notes = loadAllNotes(workspaceRootPath)
+        this.broadcastNotesChanged(notes)
+      },
+      onNoteChange: async (noteId) => {
+        sessionLog.info(`Note '${noteId}' changed`)
+        const { loadAllNotes } = await import('@craft-agent/shared/notes')
+        const notes = loadAllNotes(workspaceRootPath)
+        this.broadcastNotesChanged(notes)
+      },
 
       // Session metadata changes (external edits to session.jsonl headers).
       // Detects label/flag/name/sessionStatus changes made by other instances or scripts.
@@ -1098,6 +1111,15 @@ export class SessionManager {
     if (!this.windowManager) return
     sessionLog.info(`Broadcasting skills changed (${skills.length} skills)`)
     this.windowManager.broadcastToAll(IPC_CHANNELS.SKILLS_CHANGED, skills)
+  }
+
+  /**
+   * Broadcast notes changed event to all windows
+   */
+  private broadcastNotesChanged(notes: import('@craft-agent/shared/notes').LoadedNote[]): void {
+    if (!this.windowManager) return
+    sessionLog.info(`Broadcasting notes changed (${notes.length} notes)`)
+    this.windowManager.broadcastToAll(IPC_CHANNELS.NOTES_CHANGED, notes)
   }
 
   /**
@@ -2496,6 +2518,19 @@ export class SessionManager {
 
         // OAuth flow is now user-initiated via startSessionOAuth()
         // The UI will call sessionCommand({ type: 'startOAuth' }) when user clicks "Sign in"
+      }
+
+      // Wire up onStatusChanged to update session status through session manager
+      managed.agent.onStatusChanged = async (statusId: string) => {
+        // Validate status exists in workspace config
+        const statusConfig = loadStatusConfig(managed.workspace.rootPath)
+        const validStatus = statusConfig.statuses.find((s: { id: string }) => s.id === statusId)
+        if (!validStatus) {
+          sessionLog.warn(`Invalid status "${statusId}" requested by agent for session ${managed.id}`)
+          return
+        }
+        sessionLog.info(`Agent requested status change for session ${managed.id}: ${statusId}`)
+        await this.setSessionStatus(managed.id, statusId)
       }
 
       // Wire up onSpawnSession to create sub-sessions from agent tool calls

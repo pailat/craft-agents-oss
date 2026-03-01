@@ -250,6 +250,8 @@ export function createClaudeContext(options: ClaudeContextOptions): SessionToolC
     updatePreferences: (updates: Record<string, unknown>) => {
       updatePreferencesImpl(updates as any);
     },
+    // Note: setSessionStatus is injected by session-scoped-tools.ts via callback override
+    // to route through the session manager (in-memory + UI + automations).
     // Source management
     loadSourceConfig: (sourceSlug: string): SourceConfig | null => {
       const config = loadSourceConfigImpl(workspacePath, sourceSlug);

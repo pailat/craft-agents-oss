@@ -5,11 +5,12 @@
  * All three systems use the same icon format and behavior:
  *
  * Supported formats:
+ * - Lucide name: "globe", "arrow-right" - rendered as Lucide React component
  * - Emoji: "🔧" - rendered as text in UI
  * - URL: "https://..." - auto-downloaded to icon.{ext} file
  * - File: icon.svg, icon.png, etc. - auto-discovered in directory
  *
- * Priority: Config value (emoji/URL) > Local file (auto-discovered)
+ * Priority: Config value (lucide/emoji/URL) > Local file (auto-discovered)
  * Config is the source of truth. Local files are only used when config.icon is undefined.
  *
  * NOT supported (rejected):
@@ -29,9 +30,10 @@ export {
   isEmoji,
   isIconUrl,
   isInvalidIconValue,
+  isLucideIconName,
 } from './icon-constants.ts';
 
-import { ICON_EXTENSIONS, isEmoji, isIconUrl, isInvalidIconValue } from './icon-constants.ts';
+import { ICON_EXTENSIONS, isEmoji, isIconUrl, isInvalidIconValue, isLucideIconName } from './icon-constants.ts';
 
 /**
  * Map of content-type to file extension for icon downloads.
@@ -53,7 +55,7 @@ const CONTENT_TYPE_TO_EXT: Record<string, string> = {
 
 /**
  * Validate and normalize an icon value.
- * Returns the value if valid (emoji or URL), undefined if invalid.
+ * Returns the value if valid (Lucide name, emoji, or URL), undefined if invalid.
  *
  * @param icon - The icon value to validate
  * @param context - Context for debug logging (e.g., "Skills", "Sources", "Statuses")
@@ -71,13 +73,18 @@ export function validateIconValue(icon: unknown, context: string = 'Icon'): stri
     return undefined;
   }
 
+  // Accept Lucide icon name (e.g., "globe", "arrow-right")
+  if (isLucideIconName(trimmed)) {
+    return trimmed;
+  }
+
   // Accept emoji or URL
   if (isEmoji(trimmed) || isIconUrl(trimmed)) {
     return trimmed;
   }
 
   // Unknown format - reject
-  debug(`[${context}] Unknown icon format, must be emoji or URL:`, trimmed);
+  debug(`[${context}] Unknown icon format, must be Lucide icon name, emoji, or URL:`, trimmed);
   return undefined;
 }
 
@@ -201,8 +208,8 @@ export function needsIconDownload(iconValue: string | undefined, localIconPath: 
  * Result of resolving an icon for rendering.
  */
 export interface ResolvedIcon {
-  type: 'file' | 'emoji' | 'url' | 'none';
-  /** For file: absolute path. For emoji: the emoji string. For url: the URL. */
+  type: 'file' | 'emoji' | 'url' | 'lucide' | 'none';
+  /** For file: absolute path. For emoji: the emoji string. For lucide: icon name. For url: the URL. */
   value?: string;
 }
 
@@ -211,26 +218,32 @@ export interface ResolvedIcon {
  * Config value is the source of truth. Local files are fallback for auto-discovery.
  *
  * Priority:
- * 1. Emoji in config → emoji
- * 2. URL in config → url (caller handles download/display)
- * 3. Local file (auto-discovered) → file
- * 4. None
+ * 1. Lucide icon name in config → lucide (rendered as Lucide React component)
+ * 2. Emoji in config → emoji
+ * 3. URL in config → url (caller handles download/display)
+ * 4. Local file (auto-discovered) → file
+ * 5. None
  *
- * @param iconValue - The icon value from config (emoji or URL)
+ * @param iconValue - The icon value from config (Lucide name, emoji, or URL)
  * @param localIconPath - Path to local icon file if it exists (auto-discovered)
  */
 export function resolveIcon(iconValue: string | undefined, localIconPath: string | undefined): ResolvedIcon {
-  // Priority 1: Emoji from config
+  // Priority 1: Lucide icon name from config (e.g., "globe", "arrow-right")
+  if (iconValue && isLucideIconName(iconValue)) {
+    return { type: 'lucide', value: iconValue };
+  }
+
+  // Priority 2: Emoji from config
   if (iconValue && isEmoji(iconValue)) {
     return { type: 'emoji', value: iconValue };
   }
 
-  // Priority 2: URL from config (caller handles download/display)
+  // Priority 3: URL from config (caller handles download/display)
   if (iconValue && isIconUrl(iconValue)) {
     return { type: 'url', value: iconValue };
   }
 
-  // Priority 3: Auto-discovered local file (only when config.icon is undefined)
+  // Priority 4: Auto-discovered local file (only when config.icon is undefined)
   if (localIconPath) {
     return { type: 'file', value: localIconPath };
   }

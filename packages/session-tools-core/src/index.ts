@@ -147,6 +147,8 @@ export {
   handleCredentialPrompt,
   // Update Preferences
   handleUpdatePreferences,
+  // Set Session Status
+  handleSetSessionStatus,
   // Transform Data
   handleTransformData,
   // Render Template
@@ -165,6 +167,7 @@ export type {
   MicrosoftOAuthTriggerArgs,
   CredentialPromptArgs,
   UpdatePreferencesArgs,
+  SetSessionStatusArgs,
   TransformDataArgs,
   RenderTemplateArgs,
 } from './handlers/index.ts';
@@ -181,6 +184,7 @@ export {
   CredentialPromptSchema,
   CallLlmSchema,
   UpdatePreferencesSchema,
+  SetSessionStatusSchema,
   TransformDataSchema,
   RenderTemplateSchema,
   // Descriptions

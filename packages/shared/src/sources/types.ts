@@ -207,6 +207,23 @@ export function isOAuthSource(source: LoadedSource): boolean {
 export type McpTransport = 'http' | 'sse' | 'stdio';
 
 /**
+ * macOS TCC permissions that an MCP server may require.
+ * Used to provide helpful error messages when permissions are not granted.
+ * The app's Info.plist must include corresponding NS*UsageDescription keys.
+ */
+export type MacPermission =
+  | 'calendars'
+  | 'reminders'
+  | 'contacts'
+  | 'photos'
+  | 'camera'
+  | 'microphone'
+  | 'location'
+  | 'documents-folder'
+  | 'desktop-folder'
+  | 'downloads-folder';
+
+/**
  * MCP-specific configuration
  * Supports both HTTP-based and local stdio-based MCP servers.
  */
@@ -249,6 +266,18 @@ export interface McpSourceConfig {
    * Environment variables for the spawned process.
    */
   env?: Record<string, string>;
+
+  /**
+   * Working directory for the spawned process.
+   * Only used with stdio transport.
+   */
+  cwd?: string;
+
+  /**
+   * macOS permissions required by this MCP server.
+   * Used to provide helpful error messages when permissions are not granted.
+   */
+  requiredPermissions?: MacPermission[];
 }
 
 /**

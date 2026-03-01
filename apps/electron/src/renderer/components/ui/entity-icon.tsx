@@ -1,7 +1,8 @@
 /**
  * EntityIcon - Unified base component for rendering any entity's icon.
  *
- * Handles three icon kinds:
+ * Handles four icon kinds:
+ * - lucide: Renders a Lucide icon by name via DynamicLucideIcon (lazy-loaded)
  * - emoji: Renders as sized text span with bg-muted container
  * - file: Renders via CrossfadeAvatar with smooth loading transition
  * - fallback: Renders the fallbackIcon (Lucide component) with proper sizing
@@ -16,6 +17,7 @@
 import * as React from 'react'
 import { CrossfadeAvatar } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
+import { DynamicLucideIcon } from '@/components/icons/DynamicLucideIcon'
 import type { ResolvedEntityIcon, IconSize } from '@craft-agent/shared/icons'
 import { ICON_SIZE_CLASSES, ICON_EMOJI_SIZES } from '@craft-agent/shared/icons'
 
@@ -81,6 +83,26 @@ function EntityIconComponent({
 
   // Standard container styling (ring + rounded + shrink-0)
   const containerBase = 'rounded-[4px] ring-1 ring-border/30 shrink-0'
+
+  // --- Lucide icon rendering (by name) ---
+  if (icon.kind === 'lucide' && icon.value) {
+    if (bare) {
+      return <DynamicLucideIcon name={icon.value} className={cn("h-3.5 w-3.5", className)} />
+    }
+    return (
+      <div
+        className={cn(
+          sizeClass,
+          !chromeless && containerBase,
+          'flex items-center justify-center',
+          className,
+        )}
+        title={alt}
+      >
+        <DynamicLucideIcon name={icon.value} className="w-3/5 h-3/5 text-muted-foreground" />
+      </div>
+    )
+  }
 
   // --- Emoji rendering ---
   if (icon.kind === 'emoji') {

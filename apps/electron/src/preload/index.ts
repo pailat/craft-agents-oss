@@ -307,6 +307,31 @@ const api: ElectronAPI = {
     }
   },
 
+  // Notes
+  getNotes: (workspaceId: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.NOTES_GET, workspaceId),
+  getNote: (workspaceId: string, noteId: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.NOTES_GET_ONE, workspaceId, noteId),
+  saveNote: (workspaceId: string, note: { id: string; title: string; content: Record<string, unknown>; markdown: string; tags?: string[]; convertedToSessionId?: string }) =>
+    ipcRenderer.invoke(IPC_CHANNELS.NOTES_SAVE, workspaceId, note),
+  createNote: (workspaceId: string, title?: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.NOTES_CREATE, workspaceId, title),
+  deleteNote: (workspaceId: string, noteId: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.NOTES_DELETE, workspaceId, noteId),
+  openNoteInFinder: (workspaceId: string, noteId: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.NOTES_OPEN_FINDER, workspaceId, noteId),
+
+  // Notes change listener (live updates when notes are added/removed/modified)
+  onNotesChanged: (callback: (notes: import('@craft-agent/shared/notes').LoadedNote[]) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, notes: import('@craft-agent/shared/notes').LoadedNote[]) => {
+      callback(notes)
+    }
+    ipcRenderer.on(IPC_CHANNELS.NOTES_CHANGED, handler)
+    return () => {
+      ipcRenderer.removeListener(IPC_CHANNELS.NOTES_CHANGED, handler)
+    }
+  },
+
   // Skills
   getSkills: (workspaceId: string, workingDirectory?: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.SKILLS_GET, workspaceId, workingDirectory),

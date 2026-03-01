@@ -10,3 +10,5 @@ export {
   ICON_SIZE_CLASSES,
   ICON_EMOJI_SIZES,
 } from './types.ts'
+
+export { isLucideIconName } from './lucide-registry.ts'

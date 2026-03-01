@@ -65,6 +65,7 @@ function sdkConfigToClientConfig(config: SdkMcpServerConfig): McpClientConfig | 
       command: config.command,
       args: config.args,
       env: config.env,
+      cwd: config.cwd,
     };
   }
   return null;
@@ -239,7 +240,18 @@ export class McpClientPool {
         try {
           await this.connect(slug, config);
         } catch (err) {
-          this.debug(`Failed to connect MCP source ${slug}: ${err instanceof Error ? err.message : String(err)}`);
+          const errMsg = err instanceof Error ? err.message : String(err);
+          // Provide actionable guidance when stdio sources with declared permissions fail
+          if (config.type === 'stdio' && config.requiredPermissions?.length) {
+            const perms = config.requiredPermissions.join(', ');
+            this.debug(
+              `Failed to connect MCP source ${slug}: ${errMsg}. ` +
+              `This source requires macOS permissions: [${perms}]. ` +
+              `Grant them in System Settings > Privacy & Security.`
+            );
+          } else {
+            this.debug(`Failed to connect MCP source ${slug}: ${errMsg}`);
+          }
           failures.push(slug);
         }
       }

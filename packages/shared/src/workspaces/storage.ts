@@ -86,6 +86,14 @@ export function getWorkspaceSkillsPath(rootPath: string): string {
   return join(rootPath, 'skills');
 }
 
+/**
+ * Get path to workspace notes directory
+ * @param rootPath - Absolute path to workspace root folder
+ */
+export function getWorkspaceNotesPath(rootPath: string): string {
+  return join(rootPath, 'notes');
+}
+
 // ============================================================
 // Config Operations
 // ============================================================
@@ -304,6 +312,7 @@ export function createWorkspaceAtPath(
   mkdirSync(getWorkspaceSourcesPath(rootPath), { recursive: true });
   mkdirSync(getWorkspaceSessionsPath(rootPath), { recursive: true });
   mkdirSync(getWorkspaceSkillsPath(rootPath), { recursive: true });
+  mkdirSync(getWorkspaceNotesPath(rootPath), { recursive: true });
 
   // Save config
   saveWorkspaceConfig(rootPath, config);

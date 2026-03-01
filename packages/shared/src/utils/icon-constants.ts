@@ -8,6 +8,9 @@
  * without pulling in fs/path dependencies.
  */
 
+// Re-export Lucide name validation (browser-safe, no React deps)
+export { isLucideIconName } from '../icons/lucide-registry.ts';
+
 // ============================================================
 // Constants
 // ============================================================

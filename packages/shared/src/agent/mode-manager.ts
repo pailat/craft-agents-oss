@@ -1730,6 +1730,11 @@ export function shouldAllowToolInMode(
       return { allowed: true };
     }
 
+    // Always allow KOS knowledge base tools (read/write knowledge is safe)
+    if (toolName.startsWith('mcp__kos__')) {
+      return { allowed: true };
+    }
+
     // Handle session-scoped tools - allow read-only, block mutations
     if (toolName.startsWith('mcp__session__')) {
       // Read-only session tools - always allowed in Explore mode
