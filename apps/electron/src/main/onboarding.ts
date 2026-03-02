@@ -5,10 +5,10 @@
  */
 import { ipcMain } from 'electron'
 import { mainLog } from './logger'
-import { getAuthState, getSetupNeeds } from '@craft-agent/shared/auth'
-import { getCredentialManager } from '@craft-agent/shared/credentials'
-import { CraftOAuth, startClaudeOAuth, exchangeClaudeCode, hasValidOAuthState, clearOAuthState } from '@craft-agent/shared/auth'
-import { validateMcpConnection } from '@craft-agent/shared/mcp'
+import { getAuthState, getSetupNeeds } from '@kos/shared/auth'
+import { getCredentialManager } from '@kos/shared/credentials'
+import { CraftOAuth, startClaudeOAuth, exchangeClaudeCode, hasValidOAuthState, clearOAuthState } from '@kos/shared/auth'
+import { validateMcpConnection } from '@kos/shared/mcp'
 import { IPC_CHANNELS } from '../shared/types'
 import type { SessionManager } from './sessions'
 

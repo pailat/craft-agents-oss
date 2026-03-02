@@ -27,26 +27,26 @@ const CONFIG_FILE_PATTERNS: { pattern: RegExp; type: ConfigFileType }[] = [
 ];
 
 /**
- * Craft Agent specific config files that have known schemas.
+ * Kos specific config files that have known schemas.
  */
-const CRAFT_AGENT_CONFIG_PATTERNS = [
+const KOS_CONFIG_PATTERNS = [
   // Main config
-  /\.craft-agent\/config\.json$/,
+  /\.kos\/config\.json$/,
   // Preferences
-  /\.craft-agent\/preferences\.json$/,
+  /\.kos\/preferences\.json$/,
   // Source configs
-  /\.craft-agent\/workspaces\/[^/]+\/sources\/[^/]+\/config\.json$/,
+  /\.kos\/workspaces\/[^/]+\/sources\/[^/]+\/config\.json$/,
   // Permissions
-  /\.craft-agent\/workspaces\/[^/]+\/permissions\.json$/,
-  /\.craft-agent\/permissions\/[^/]+\.json$/,
+  /\.kos\/workspaces\/[^/]+\/permissions\.json$/,
+  /\.kos\/permissions\/[^/]+\.json$/,
   // Theme
-  /\.craft-agent\/workspaces\/[^/]+\/theme\.json$/,
+  /\.kos\/workspaces\/[^/]+\/theme\.json$/,
   // Statuses
-  /\.craft-agent\/workspaces\/[^/]+\/statuses\/config\.json$/,
+  /\.kos\/workspaces\/[^/]+\/statuses\/config\.json$/,
   // Labels
-  /\.craft-agent\/workspaces\/[^/]+\/labels\.json$/,
+  /\.kos\/workspaces\/[^/]+\/labels\.json$/,
   // Tool icons
-  /\.craft-agent\/tool-icons\/tool-icons\.json$/,
+  /\.kos\/tool-icons\/tool-icons\.json$/,
 ];
 
 /**
@@ -98,16 +98,16 @@ export class ConfigValidator {
   }
 
   /**
-   * Check if a file path is a Craft Agent config file.
+   * Check if a file path is a Kos config file.
    *
    * @param filePath - Path to check
-   * @returns true if this is a Craft Agent config
+   * @returns true if this is a Kos config
    */
-  isCraftAgentConfig(filePath: string): boolean {
+  isKosConfig(filePath: string): boolean {
     const normalizedPath = process.platform === 'win32'
       ? filePath.replace(/\\/g, '/').toLowerCase()
       : filePath.replace(/\\/g, '/');
-    return CRAFT_AGENT_CONFIG_PATTERNS.some((pattern) => pattern.test(normalizedPath));
+    return KOS_CONFIG_PATTERNS.some((pattern) => pattern.test(normalizedPath));
   }
 
   // ============================================================

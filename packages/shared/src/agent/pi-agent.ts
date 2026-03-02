@@ -15,7 +15,7 @@
 
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createInterface, type Interface as ReadlineInterface } from 'node:readline';
-import type { AgentEvent } from '@craft-agent/core/types';
+import type { AgentEvent } from '@kos/core/types';
 import type { FileAttachment } from '../utils/files.ts';
 
 import type {
@@ -39,7 +39,7 @@ import type { Workspace } from '../config/storage.ts';
 import { PiEventAdapter } from './backend/pi/event-adapter.ts';
 import { EventQueue } from './backend/event-queue.ts';
 
-// System prompt for Craft Agent context
+// System prompt for Kos context
 import { getSystemPrompt } from '../prompts/system.ts';
 
 // Credential manager for token storage
@@ -62,7 +62,7 @@ import { getSessionToolProxyDefs, SESSION_TOOL_NAMES } from './backend/pi/sessio
 import {
   SESSION_TOOL_REGISTRY,
   type ToolResult as SessionToolResult,
-} from '@craft-agent/session-tools-core';
+} from '@kos/session-tools-core';
 import { createClaudeContext, type SessionToolContext } from './claude-context.ts';
 
 // call_llm pre-execution pipeline
@@ -101,7 +101,7 @@ import { LLM_QUERY_TIMEOUT_MS, type LLMQueryRequest, type LLMQueryResult } from 
  * planning heuristics, config watching, usage tracking).
  */
 export class PiAgent extends BaseAgent {
-  protected backendName = 'Craft Agents Backend';
+  protected backendName = 'Kos Backend';
 
   // ============================================================
   // Subprocess State
@@ -259,9 +259,9 @@ export class PiAgent extends BaseAgent {
         ...process.env,
         ...this.config.envOverrides,
         // Pass session dir for cross-process toolMetadataStore
-        ...(sessionDir ? { CRAFT_SESSION_DIR: sessionDir } : {}),
+        ...(sessionDir ? { KOS_SESSION_DIR: sessionDir } : {}),
         // Propagate debug mode
-        CRAFT_DEBUG: (process.argv.includes('--debug') || process.env.CRAFT_DEBUG === '1') ? '1' : '0',
+        KOS_DEBUG: (process.argv.includes('--debug') || process.env.KOS_DEBUG === '1') ? '1' : '0',
       },
     });
 
@@ -667,7 +667,7 @@ export class PiAgent extends BaseAgent {
    */
   private handleSubprocessEvent(event: Record<string, unknown>): void {
     // The subprocess sends Pi SDK AgentSessionEvent objects serialized as JSON.
-    // Feed them through PiEventAdapter to convert to Craft AgentEvents.
+    // Feed them through PiEventAdapter to convert to Kos AgentEvents.
 
     // Detect session MCP tool completions (same pattern as in-process version)
     const eventType = event.type as string;
@@ -680,7 +680,7 @@ export class PiAgent extends BaseAgent {
       }
     }
 
-    // Adapt event to CraftAgentEvents
+    // Adapt event to Kos AgentEvents
     // The event adapter expects typed PiAgentEvent/AgentSessionEvent objects,
     // but since we're receiving plain JSON, we cast through unknown.
     for (const agentEvent of this.adapter.adaptEvent(event as any)) {
@@ -987,7 +987,7 @@ export class PiAgent extends BaseAgent {
 
   /**
    * Execute a session-scoped tool by name.
-   * Uses the canonical registry from @craft-agent/session-tools-core.
+   * Uses the canonical registry from @kos/session-tools-core.
    */
   private async executeSessionTool(
     toolName: string,
@@ -1132,6 +1132,19 @@ export class PiAgent extends BaseAgent {
         onAuthRequest: (request) => this.onAuthRequest?.(request),
         queryFn: (request) => this.queryLlm(request),
         onSessionStatusChanged: (statusId) => this.onStatusChanged?.(statusId),
+        // Browser panel — async callbacks routed through sessions.ts to renderer
+        browserOpenFn: async (url) => {
+          if (!this.onBrowserOpen) throw new Error('Browser panel not available in this environment');
+          return this.onBrowserOpen(url);
+        },
+        browserSnapshotFn: async () => {
+          if (!this.onBrowserSnapshot) throw new Error('Browser panel not available');
+          return this.onBrowserSnapshot();
+        },
+        browserActionFn: async (action, ref, value) => {
+          if (!this.onBrowserAction) throw new Error('Browser panel not available');
+          return this.onBrowserAction(action, ref, value);
+        },
       });
     }
 
@@ -1168,7 +1181,7 @@ export class PiAgent extends BaseAgent {
         this.config.workspace.rootPath,
         this.config.session?.workingDirectory,
         this.config.systemPromptPreset,
-        'Craft Agents Backend', // backendName
+        'Kos Backend', // backendName
         this.config.diagramType
       );
 

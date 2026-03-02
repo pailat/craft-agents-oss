@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 import { Key, Monitor } from "lucide-react"
-import { CraftAgentsSymbol } from "@/components/icons/CraftAgentsSymbol"
+import { KosSymbol } from "@/components/icons/KosSymbol"
 import { StepFormLayout } from "./primitives"
 
 import claudeIcon from "@/assets/provider-icons/claude.svg"
@@ -69,10 +69,10 @@ export function ProviderSelectStep({ onSelect }: ProviderSelectStepProps) {
     <StepFormLayout
       iconElement={
         <div className="flex size-16 items-center justify-center">
-          <CraftAgentsSymbol className="size-10 text-accent" />
+          <KosSymbol className="size-10 text-accent" />
         </div>
       }
-      title="Welcome to Craft Agents"
+      title="Welcome to Kos"
       description="How would you like to connect?"
     >
       <div className="space-y-3">

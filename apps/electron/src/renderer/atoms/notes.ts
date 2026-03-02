@@ -6,7 +6,7 @@
  */
 
 import { atom } from 'jotai'
-import type { LoadedNote } from '@craft-agent/shared/notes'
+import type { LoadedNote } from '@kos/shared/notes'
 
 /**
  * Atom to store the current workspace's notes.

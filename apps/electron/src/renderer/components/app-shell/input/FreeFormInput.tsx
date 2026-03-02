@@ -12,10 +12,10 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react'
-import { Icon_Home, Icon_Folder } from '@craft-agent/ui'
+import { Icon_Home, Icon_Folder } from '@kos/ui'
 
 import * as storage from '@/lib/local-storage'
-import { extractWorkspaceSlugFromPath } from '@craft-agent/shared/utils/workspace-slug'
+import { extractWorkspaceSlugFromPath } from '@kos/shared/utils/workspace-slug'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -33,10 +33,10 @@ import {
   InlineLabelMenu,
   useInlineLabelMenu,
 } from '@/components/ui/label-menu'
-import type { LabelConfig } from '@craft-agent/shared/labels'
+import type { LabelConfig } from '@kos/shared/labels'
 import { parseMentions } from '@/lib/mentions'
 import { RichTextInput, type RichTextInputHandle } from '@/components/ui/rich-text-input'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@craft-agent/ui'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@kos/ui'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -63,9 +63,9 @@ import { SourceAvatar } from '@/components/ui/source-avatar'
 import { ConnectionIcon } from '@/components/icons/ConnectionIcon'
 import { FreeFormInputContextBadge } from './FreeFormInputContextBadge'
 import type { FileAttachment, LoadedSource, LoadedSkill } from '../../../../shared/types'
-import type { PermissionMode } from '@craft-agent/shared/agent/modes'
-import { PERMISSION_MODE_ORDER } from '@craft-agent/shared/agent/modes'
-import { type ThinkingLevel, THINKING_LEVELS, getThinkingLevelName } from '@craft-agent/shared/agent/thinking-levels'
+import type { PermissionMode } from '@kos/shared/agent/modes'
+import { PERMISSION_MODE_ORDER } from '@kos/shared/agent/modes'
+import { type ThinkingLevel, THINKING_LEVELS, getThinkingLevelName } from '@kos/shared/agent/thinking-levels'
 import { useEscapeInterrupt } from '@/context/EscapeInterruptContext'
 import { hasOpenOverlay } from '@/lib/overlay-detection'
 import { EscapeInterruptOverlay } from './EscapeInterruptOverlay'
@@ -314,7 +314,7 @@ export function FreeFormInput({
   const connectionsByProvider = React.useMemo(() => {
     const groups: Record<string, typeof llmConnections> = {
       'Anthropic': [],
-      'Craft Agents Backend': [],
+      'Kos Backend': [],
     }
     for (const conn of llmConnections) {
       const provider = conn.providerType || 'anthropic'
@@ -322,7 +322,7 @@ export function FreeFormInput({
       if (provider === 'anthropic' || provider === 'anthropic_compat' || provider === 'bedrock' || provider === 'vertex') {
         groups['Anthropic'].push(conn)
       } else if (provider === 'pi' || provider === 'pi_compat') {
-        groups['Craft Agents Backend'].push(conn)
+        groups['Kos Backend'].push(conn)
       }
     }
     // Return only non-empty groups

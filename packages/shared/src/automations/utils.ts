@@ -178,33 +178,33 @@ export function cleanEnv(): Record<string, string> {
 export function buildEnvFromPayload(event: AutomationEvent, payload: BaseEventPayload): Record<string, string> {
   const env: Record<string, string> = {
     ...cleanEnv(),
-    CRAFT_EVENT: event,
-    CRAFT_EVENT_DATA: JSON.stringify(payload),
+    KOS_EVENT: event,
+    KOS_EVENT_DATA: JSON.stringify(payload),
   };
 
-  if (payload.sessionId) env.CRAFT_SESSION_ID = payload.sessionId;
-  if (payload.sessionName) env.CRAFT_SESSION_NAME = sanitizeForShell(payload.sessionName);
-  if (payload.workspaceId) env.CRAFT_WORKSPACE_ID = payload.workspaceId;
+  if (payload.sessionId) env.KOS_SESSION_ID = payload.sessionId;
+  if (payload.sessionName) env.KOS_SESSION_NAME = sanitizeForShell(payload.sessionName);
+  if (payload.workspaceId) env.KOS_WORKSPACE_ID = payload.workspaceId;
 
   // Add session metadata as JSON (includes sessionId, sessionName if available)
   const sessionMetadata: Record<string, string> = {};
   if (payload.sessionId) sessionMetadata.id = payload.sessionId;
   if (payload.sessionName) sessionMetadata.name = payload.sessionName;
   if (Object.keys(sessionMetadata).length > 0) {
-    env.CRAFT_SESSION_METADATA = JSON.stringify(sessionMetadata);
+    env.KOS_SESSION_METADATA = JSON.stringify(sessionMetadata);
   }
 
   // Add local time for scheduler events
   if (event === 'SchedulerTick') {
     const now = new Date();
-    env.CRAFT_LOCAL_TIME = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-    env.CRAFT_LOCAL_DATE = now.toISOString().split('T')[0]!;
+    env.KOS_LOCAL_TIME = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    env.KOS_LOCAL_DATE = now.toISOString().split('T')[0]!;
   }
 
   // Add payload fields as individual env vars
   for (const [key, value] of Object.entries(payload)) {
     if (key === 'sessionId' || key === 'sessionName' || key === 'workspaceId' || key === 'timestamp') continue;
-    const envKey = `CRAFT_${toSnakeCase(key).toUpperCase()}`;
+    const envKey = `KOS_${toSnakeCase(key).toUpperCase()}`;
     // Sanitize user-controlled values
     const sanitized = typeof value === 'string' ? sanitizeForShell(value) : String(value);
     env[envKey] = sanitized;

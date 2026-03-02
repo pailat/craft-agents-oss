@@ -42,7 +42,7 @@ export interface PrerequisiteManagerConfig {
 // ============================================================
 
 /** Slugs that are exempt from prerequisite checks (internal sources) */
-const EXEMPT_SLUGS = new Set(['session', 'craft-agents-docs']);
+const EXEMPT_SLUGS = new Set(['session', 'kos-docs']);
 
 // ============================================================
 // Rules

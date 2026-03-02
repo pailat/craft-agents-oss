@@ -1,10 +1,10 @@
 # Automations Configuration Guide
 
-This guide explains how to configure automations in Craft Agent to automate workflows based on events.
+This guide explains how to configure automations in Kos to automate workflows based on events.
 
 ## What Are Automations?
 
-Automations allow you to trigger actions automatically when specific events occur in Craft Agent. You can:
+Automations allow you to trigger actions automatically when specific events occur in Kos. You can:
 - Send prompts to create agent sessions based on events
 - Execute prompts on a schedule using cron expressions
 - Automate workflows based on permission mode changes, flags, or session status changes
@@ -14,7 +14,7 @@ Automations allow you to trigger actions automatically when specific events occu
 Automations are configured in `automations.json` at the root of your workspace:
 
 ```
-~/.craft-agent/workspaces/{workspaceId}/automations.json
+~/.kos/workspaces/{workspaceId}/automations.json
 ```
 
 ## Basic Structure
@@ -38,7 +38,7 @@ Automations are configured in `automations.json` at the root of your workspace:
 
 ## Supported Events
 
-### App Events (triggered by Craft Agent)
+### App Events (triggered by Kos)
 
 | Event | Trigger | Match Value |
 |-------|---------|-------------|
@@ -74,7 +74,7 @@ Automations are configured in `automations.json` at the root of your workspace:
 
 ### Prompt Actions
 
-Send a prompt to Craft Agent (creates a new session for scheduled prompts).
+Send a prompt to Kos (creates a new session for scheduled prompts).
 
 ```json
 {
@@ -92,7 +92,7 @@ Send a prompt to Craft Agent (creates a new session for scheduled prompts).
 
 **Features:**
 - Use `@mentions` to reference sources or skills
-- Environment variables are expanded (e.g., `$CRAFT_LABEL`)
+- Environment variables are expanded (e.g., `$KOS_LABEL`)
 
 **LLM Connection & Model:** Optionally specify which AI provider and model to use for the created session. If omitted, the workspace default connection and model are used.
 
@@ -237,14 +237,14 @@ This creates a session with the "Scheduled" and "morning-briefing" labels applie
     "LabelAdd": [
       {
         "actions": [
-          { "type": "prompt", "prompt": "The label $CRAFT_LABEL was added. Log this change with a timestamp." }
+          { "type": "prompt", "prompt": "The label $KOS_LABEL was added. Log this change with a timestamp." }
         ]
       }
     ],
     "LabelRemove": [
       {
         "actions": [
-          { "type": "prompt", "prompt": "The label $CRAFT_LABEL was removed. Log this change with a timestamp." }
+          { "type": "prompt", "prompt": "The label $KOS_LABEL was removed. Log this change with a timestamp." }
         ]
       }
     ]
@@ -297,7 +297,7 @@ Automations are validated when:
 
 **Using config_validate:**
 
-Ask Craft Agent to validate your automations configuration:
+Ask Kos to validate your automations configuration:
 
 ```
 Validate my automations configuration

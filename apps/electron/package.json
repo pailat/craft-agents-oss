@@ -1,14 +1,14 @@
 {
-  "name": "@craft-agent/electron",
+  "name": "@kos/electron",
   "version": "0.5.1",
-  "description": "Electron desktop app for Craft Agents",
+  "description": "Electron desktop app for Kos",
   "main": "dist/main.cjs",
   "private": true,
   "author": {
-    "name": "Craft Docs Ltd.",
-    "email": "support@craft.do"
+    "name": "Kos Inc.",
+    "email": "support@kos.ai"
   },
-  "homepage": "https://agents.craft.do",
+  "homepage": "https://kos.ai",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -35,9 +35,9 @@
     "lint:fix": "eslint src/ --fix"
   },
   "dependencies": {
-    "@craft-agent/core": "workspace:*",
-    "@craft-agent/shared": "workspace:*",
-    "@craft-agent/ui": "workspace:*",
+    "@kos/core": "workspace:*",
+    "@kos/shared": "workspace:*",
+    "@kos/ui": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

@@ -18,7 +18,7 @@ import openrouterIcon from '@/assets/provider-icons/openrouter.svg'
 import piIcon from '@/assets/provider-icons/pi.svg'
 import vercelIcon from '@/assets/provider-icons/vercel.svg'
 
-import type { LlmProviderType } from '@craft-agent/shared/config/llm-connections'
+import type { LlmProviderType } from '@kos/shared/config/llm-connections'
 
 /**
  * Icon URLs for each provider
@@ -49,8 +49,8 @@ const providerDisplayNames: Record<string, string> = {
   copilot: 'GitHub Copilot',
   ollama: 'Ollama',
   openrouter: 'OpenRouter',
-  pi: 'Craft Agents Backend',
-  pi_compat: 'Craft Agents Backend',
+  pi: 'Kos Backend',
+  pi_compat: 'Kos Backend',
   vercel: 'Vercel',
 }
 

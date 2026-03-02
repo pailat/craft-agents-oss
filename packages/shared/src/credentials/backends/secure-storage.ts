@@ -1,7 +1,7 @@
 /**
  * Secure Storage Backend
  *
- * Stores credentials in an encrypted file at ~/.craft-agent/credentials.enc
+ * Stores credentials in an encrypted file at ~/.kos/credentials.enc
  * Uses AES-256-GCM for authenticated encryption.
  *
  * Encryption key is derived from OS-native hardware UUID using PBKDF2:
@@ -41,7 +41,7 @@ import type { CredentialId, StoredCredential } from '../types.ts';
 import { credentialIdToAccount, accountToCredentialId } from '../types.ts';
 
 // File location
-const CREDENTIALS_DIR = join(homedir(), '.craft-agent');
+const CREDENTIALS_DIR = join(homedir(), '.kos');
 const CREDENTIALS_FILE = join(CREDENTIALS_DIR, 'credentials.enc');
 
 // File format constants
@@ -309,9 +309,12 @@ export class SecureStorageBackend implements CredentialBackend {
 
     // New stable machine ID using hardware UUID (v2)
     // This is far more stable than hostname which can change with network/DHCP
+    // IMPORTANT: The 'craft-agent-v2' salt below must NOT be renamed to 'kos-v2'.
+    // Changing it would alter the derived encryption key and make all existing
+    // stored credentials unreadable. This is a cryptographic identity, not a brand name.
     const stableMachineId = createHash('sha256')
       .update(getStableMachineId())
-      .update('craft-agent-v2') // Bumped version for new key derivation
+      .update('craft-agent-v2') // Legacy name — do not change (see comment above)
       .digest();
 
     // Derive key using PBKDF2
@@ -323,13 +326,15 @@ export class SecureStorageBackend implements CredentialBackend {
   /**
    * Legacy key derivation for migration from v1 (included hostname).
    * Used to decrypt credentials from older versions before re-encrypting with stable key.
+   * IMPORTANT: The 'craft-agent-v1' salt must NOT be renamed — it is a cryptographic
+   * identity used to derive the decryption key for migrating old credential files.
    */
   private getLegacyEncryptionKey(salt: Buffer): Buffer {
     const legacyMachineId = createHash('sha256')
       .update(hostname())
       .update(userInfo().username)
       .update(homedir())
-      .update('craft-agent-v1')
+      .update('craft-agent-v1') // Legacy name — do not change (see comment above)
       .digest();
 
     return pbkdf2Sync(legacyMachineId, salt, PBKDF2_ITERATIONS, KEY_SIZE, 'sha256');

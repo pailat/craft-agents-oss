@@ -46,7 +46,7 @@ import { isMac } from "@/lib/platform"
 import { Button } from "@/components/ui/button"
 import { HeaderIconButton } from "@/components/ui/HeaderIconButton"
 import { Separator } from "@/components/ui/separator"
-import { Tooltip, TooltipTrigger, TooltipContent, DocumentFormattedMarkdownOverlay } from "@craft-agent/ui"
+import { Tooltip, TooltipTrigger, TooltipContent, DocumentFormattedMarkdownOverlay } from "@kos/ui"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -89,21 +89,21 @@ import { useFocusContext } from "@/context/FocusContext"
 import { getSessionTitle } from "@/utils/session"
 import { useSetAtom } from "jotai"
 import type { Session, Workspace, FileAttachment, PermissionRequest, LoadedSource, LoadedSkill, PermissionMode, SourceFilter, AutomationFilter } from "../../../shared/types"
-import { PERMISSION_MODE_ORDER } from "@craft-agent/shared/agent/modes"
+import { PERMISSION_MODE_ORDER } from "@kos/shared/agent/modes"
 import { sessionMetaMapAtom, type SessionMeta } from "@/atoms/sessions"
 import { sourcesAtom } from "@/atoms/sources"
 import { skillsAtom } from "@/atoms/skills"
 import { notesAtom } from "@/atoms/notes"
-import type { LoadedNote } from '@craft-agent/shared/notes'
+import type { LoadedNote } from '@kos/shared/notes'
 import { type SessionStatusId, type SessionStatus, statusConfigsToSessionStatuses } from "@/config/session-status-config"
 import { useStatuses } from "@/hooks/useStatuses"
 import { useLabels } from "@/hooks/useLabels"
 import { useViews } from "@/hooks/useViews"
 import { LabelIcon, LabelValueTypeIcon } from "@/components/ui/label-icon"
 import { filterItems as filterLabelMenuItems, filterSessionStatuses as filterLabelMenuStates, type LabelMenuItem } from "@/components/ui/label-menu"
-import { buildLabelTree, getDescendantIds, getLabelDisplayName, flattenLabels, extractLabelId, findLabelById } from "@craft-agent/shared/labels"
-import type { LabelConfig, LabelTreeNode } from "@craft-agent/shared/labels"
-import { resolveEntityColor } from "@craft-agent/shared/colors"
+import { buildLabelTree, getDescendantIds, getLabelDisplayName, flattenLabels, extractLabelId, findLabelById } from "@kos/shared/labels"
+import type { LabelConfig, LabelTreeNode } from "@kos/shared/labels"
+import { resolveEntityColor } from "@kos/shared/colors"
 import * as storage from "@/lib/local-storage"
 import { toast } from "sonner"
 import { navigate, routes } from "@/lib/navigate"
@@ -129,7 +129,7 @@ import { useAutomations } from "@/hooks/useAutomations"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { PanelHeader } from "./PanelHeader"
 import { EditPopover, getEditConfig, type EditContextKey } from "@/components/ui/EditPopover"
-import { getDocUrl } from "@craft-agent/shared/docs/doc-links"
+import { getDocUrl } from "@kos/shared/docs/doc-links"
 import SettingsNavigator from "@/pages/settings/SettingsNavigator"
 import { RightSidebar } from "./RightSidebar"
 import type { RichTextInputHandle } from "@/components/ui/rich-text-input"
@@ -567,7 +567,7 @@ function AppShellContent({
   const rightSidebarHandleRef = React.useRef<HTMLDivElement>(null)
   const [session, setSession] = useSession()
   const { resolvedMode, isDark, setMode } = useTheme()
-  const { canGoBack, canGoForward, goBack, goForward, navigateToSource, navigateToSession } = useNavigation()
+  const { canGoBack, canGoForward, goBack, goForward, navigateToSource, navigateToSession, updateRightSidebar } = useNavigation()
 
   // Double-Esc interrupt feature: first Esc shows warning, second Esc interrupts
   const { handleEscapePress } = useEscapeInterrupt()
@@ -575,6 +575,21 @@ function AppShellContent({
   // UNIFIED NAVIGATION STATE - single source of truth from NavigationContext
   // All sidebar/navigator/main panel state is derived from this
   const navState = useNavigationState()
+
+  // Browser panel state — independent of navigation state so it survives session switches.
+  // Stored separately because applyNavigationState() replaces the entire navState
+  // (including rightSidebar) when the user clicks a different session.
+  const [browserPanel, setBrowserPanel] = React.useState<{
+    url?: string
+    requestId?: string
+    sessionId: string
+  } | null>(null)
+  // Only apply wider max-width when the CURRENT session has an active browser
+  const currentSessionId = isSessionsNavigation(navState) && navState.details ? navState.details.sessionId : undefined
+  const isBrowserPanel = browserPanel !== null && browserPanel.sessionId === currentSessionId
+  // Ref keeps the resize mousemove handler in sync without stale closures
+  const isBrowserPanelRef = React.useRef(isBrowserPanel)
+  React.useEffect(() => { isBrowserPanelRef.current = isBrowserPanel }, [isBrowserPanel])
 
   // Derive chat filter from navigation state (only when in chats navigator)
   const sessionFilter = isSessionsNavigation(navState) ? navState.filter : null
@@ -1196,8 +1211,9 @@ function AppShellContent({
           setSessionListHandleY(e.clientY - rect.top)
         }
       } else if (isResizing === 'right-sidebar') {
-        // Calculate from right edge
-        const newWidth = Math.min(Math.max(window.innerWidth - e.clientX, 280), 480)
+        // Calculate from right edge — wider max when browser panel is active
+        const maxWidth = isBrowserPanelRef.current ? 800 : 480
+        const newWidth = Math.min(Math.max(window.innerWidth - e.clientX, 280), maxWidth)
         setRightSidebarWidth(newWidth)
         if (rightSidebarHandleRef.current) {
           const rect = rightSidebarHandleRef.current.getBoundingClientRect()
@@ -1562,6 +1578,31 @@ function AppShellContent({
   React.useEffect(() => {
     storage.set(storage.KEYS.rightSidebarVisible, isRightSidebarVisible)
   }, [isRightSidebarVisible])
+
+  // Listen for browser panel open/close events (dispatched from App.tsx session event handler).
+  // Browser state is stored independently (not in navState.rightSidebar) so it survives
+  // session switches — applyNavigationState() replaces the entire navState.
+  React.useEffect(() => {
+    const handleBrowserOpen = (e: Event) => {
+      const { url, requestId, sessionId: ownerSessionId } = (e as CustomEvent<{
+        sessionId: string; url: string; requestId: string
+      }>).detail
+      setBrowserPanel({ url, requestId, sessionId: ownerSessionId })
+      setIsRightSidebarVisible(true)
+      // Auto-widen sidebar for browser panel if currently narrow
+      setRightSidebarWidth(prev => Math.max(prev, 550))
+    }
+    const handleBrowserClose = () => {
+      setBrowserPanel(null)
+    }
+
+    window.addEventListener('craft:browser-panel-open', handleBrowserOpen)
+    window.addEventListener('craft:browser-panel-close', handleBrowserClose)
+    return () => {
+      window.removeEventListener('craft:browser-panel-open', handleBrowserOpen)
+      window.removeEventListener('craft:browser-panel-close', handleBrowserClose)
+    }
+  }, [])
 
   // Persist focus mode state to localStorage
   React.useEffect(() => {
@@ -3405,8 +3446,9 @@ function AppShellContent({
                   style={{ width: rightSidebarWidth }}
                 >
                   <RightSidebar
-                    panel={{ type: 'sessionMetadata' }}
+                    panel={navState.rightSidebar || { type: 'sessionMetadata' }}
                     sessionId={isSessionsNavigation(navState) && navState.details ? navState.details.sessionId : undefined}
+                    browserPanel={browserPanel}
                     closeButton={rightSidebarCloseButton}
                   />
                 </motion.div>
@@ -3430,16 +3472,17 @@ function AppShellContent({
                   />
                   {/* Drawer panel */}
                   <motion.div
-                    initial={{ x: 316 }}
+                    initial={{ x: isBrowserPanel ? 600 : 316 }}
                     animate={{ x: 0 }}
-                    exit={{ x: 316 }}
+                    exit={{ x: isBrowserPanel ? 600 : 316 }}
                     transition={skipRightSidebarAnimation ? { duration: 0 } : springTransition}
-                    className="fixed inset-y-0 right-0 w-[316px] h-screen z-overlay p-1.5"
+                    className={`fixed inset-y-0 right-0 h-screen z-overlay p-1.5 ${isBrowserPanel ? 'w-[600px]' : 'w-[316px]'}`}
                   >
                     <div className="h-full bg-foreground-2 overflow-hidden shadow-strong rounded-[12px]">
                       <RightSidebar
-                        panel={{ type: 'sessionMetadata' }}
+                        panel={navState.rightSidebar || { type: 'sessionMetadata' }}
                         sessionId={isSessionsNavigation(navState) && navState.details ? navState.details.sessionId : undefined}
+                        browserPanel={browserPanel}
                         closeButton={rightSidebarCloseButton}
                       />
                     </div>

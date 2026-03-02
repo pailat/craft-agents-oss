@@ -1,20 +1,20 @@
 /**
  * Deep Link Handler
  *
- * Parses craftagents:// URLs and routes to appropriate actions.
+ * Parses kos:// URLs and routes to appropriate actions.
  *
  * URL Formats (workspace is optional - uses active window if omitted):
  *
  * Compound format (hierarchical navigation):
- *   craftagents://allSessions[/session/{sessionId}]            - Session list (all sessions)
- *   craftagents://flagged[/session/{sessionId}]             - Session list (flagged filter)
- *   craftagents://state/{stateId}[/session/{sessionId}]     - Session list (state filter)
- *   craftagents://sources[/source/{sourceSlug}]          - Sources list
- *   craftagents://settings[/{subpage}]                   - Settings (general, shortcuts, preferences)
+ *   kos://allSessions[/session/{sessionId}]            - Session list (all sessions)
+ *   kos://flagged[/session/{sessionId}]             - Session list (flagged filter)
+ *   kos://state/{stateId}[/session/{sessionId}]     - Session list (state filter)
+ *   kos://sources[/source/{sourceSlug}]          - Sources list
+ *   kos://settings[/{subpage}]                   - Settings (general, shortcuts, preferences)
  *
  * Action format:
- *   craftagents://action/{actionName}[/{id}][?params]
- *   craftagents://workspace/{workspaceId}/action/{actionName}[?params]
+ *   kos://action/{actionName}[/{id}][?params]
+ *   kos://workspace/{workspaceId}/action/{actionName}[?params]
  *
  * Actions:
  *   new-chat                  - Create new chat, optional ?input=text&name=name&send=true
@@ -25,13 +25,13 @@
  *   unflag-session/{id}       - Unflag session
  *
  * Examples:
- *   craftagents://allSessions                               (all sessions view)
- *   craftagents://allSessions/session/abc123                (specific session)
- *   craftagents://settings/shortcuts                     (shortcuts page)
- *   craftagents://sources/source/github                  (github source info)
- *   craftagents://action/new-chat                        (uses active window)
- *   craftagents://action/resume-sdk-session/{sdkId}      (resume Claude Code session)
- *   craftagents://workspace/ws123/allSessions/session/abc123   (targets specific workspace)
+ *   kos://allSessions                               (all sessions view)
+ *   kos://allSessions/session/abc123                (specific session)
+ *   kos://settings/shortcuts                     (shortcuts page)
+ *   kos://sources/source/github                  (github source info)
+ *   kos://action/new-chat                        (uses active window)
+ *   kos://action/resume-sdk-session/{sdkId}      (resume Claude Code session)
+ *   kos://workspace/ws123/allSessions/session/abc123   (targets specific workspace)
  */
 
 import type { BrowserWindow } from 'electron'
@@ -95,19 +95,19 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
   try {
     const parsed = new URL(url)
 
-    if (parsed.protocol !== 'craftagents:') {
+    if (parsed.protocol !== 'kos:') {
       return null
     }
 
     // For custom protocols, the hostname contains the first path segment
-    // e.g., craftagents://workspace/ws123 → hostname='workspace', pathname='/ws123'
-    // e.g., craftagents://allSessions/chat/abc → hostname='allSessions', pathname='/chat/abc'
+    // e.g., kos://workspace/ws123 → hostname='workspace', pathname='/ws123'
+    // e.g., kos://allSessions/chat/abc → hostname='allSessions', pathname='/chat/abc'
     const host = parsed.hostname
     const pathParts = parsed.pathname.split('/').filter(Boolean)
     const windowMode = parseWindowMode(parsed)
     const rightSidebar = parseRightSidebar(parsed)
 
-    // craftagents://auth-callback?... (OAuth callbacks - return null to let existing handler process)
+    // kos://auth-callback?... (OAuth callbacks - return null to let existing handler process)
     if (host === 'auth-callback') {
       return null
     }
@@ -117,7 +117,7 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
       'allSessions', 'flagged', 'archived', 'state', 'label', 'view', 'sources', 'settings', 'skills', 'notes', 'automations'
     ]
 
-    // craftagents://allSessions/..., craftagents://settings/..., etc. (compound routes)
+    // kos://allSessions/..., kos://settings/..., etc. (compound routes)
     if (COMPOUND_ROUTE_PREFIXES.includes(host)) {
       // Reconstruct the full compound route from host + pathname
       const viewRoute = pathParts.length > 0 ? `${host}/${pathParts.join('/')}` : host
@@ -129,7 +129,7 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
       }
     }
 
-    // craftagents://workspace/{workspaceId}/... (with workspace targeting)
+    // kos://workspace/{workspaceId}/... (with workspace targeting)
     if (host === 'workspace') {
       const workspaceId = pathParts[0]
       if (!workspaceId) return null
@@ -167,7 +167,7 @@ export function parseDeepLink(url: string): DeepLinkTarget | null {
       return result
     }
 
-    // craftagents://action/... (no workspace - uses active window)
+    // kos://action/... (no workspace - uses active window)
     if (host === 'action') {
       const result: DeepLinkTarget = {
         workspaceId: undefined,

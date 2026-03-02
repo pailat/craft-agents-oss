@@ -2,14 +2,14 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Check, CreditCard, Key, Cpu } from "lucide-react"
 import { StepFormLayout, BackButton, ContinueButton } from "./primitives"
-import type { LlmAuthType, LlmProviderType } from "@craft-agent/shared/config/llm-connections"
+import type { LlmAuthType, LlmProviderType } from "@kos/shared/config/llm-connections"
 
 /** Provider segment for the segmented control */
 export type ProviderSegment = 'anthropic' | 'pi'
 
 const SEGMENT_LABELS: Record<ProviderSegment, string> = {
   anthropic: 'Claude',
-  pi: 'Craft Agents Backend',
+  pi: 'Kos Backend',
 }
 
 const BetaBadge = () => (
@@ -20,7 +20,7 @@ const BetaBadge = () => (
 
 const SEGMENT_DESCRIPTIONS: Record<ProviderSegment, React.ReactNode> = {
   anthropic: <>Use Claude Agent SDK as the main agent.<br />Configure with your Claude subscription or API key.</>,
-  pi: <>Use Craft Agents Backend as the main agent.<BetaBadge /><br />Configure with your API key, OAuth subscription, or custom endpoint.</>,
+  pi: <>Use Kos Backend as the main agent.<BetaBadge /><br />Configure with your API key, OAuth subscription, or custom endpoint.</>,
 }
 
 /**
@@ -87,14 +87,14 @@ const API_SETUP_OPTIONS: ApiSetupOption[] = [
   {
     id: 'pi_chatgpt_oauth',
     name: 'ChatGPT Plus',
-    description: 'Use your ChatGPT subscription with Craft Agents Backend.',
+    description: 'Use your ChatGPT subscription with Kos Backend.',
     icon: <Cpu className="size-4" />,
     providerType: 'pi',
   },
   {
     id: 'pi_copilot_oauth',
     name: 'GitHub Copilot',
-    description: 'Use your GitHub Copilot subscription with Craft Agents Backend.',
+    description: 'Use your GitHub Copilot subscription with Kos Backend.',
     icon: <Cpu className="size-4" />,
     providerType: 'pi',
   },

@@ -187,7 +187,7 @@ class ModeManager {
 
     debug(`[Mode] Set permission mode to ${mode} for session ${sessionId}`);
 
-    // Notify callbacks (for CraftAgent internal sync)
+    // Notify callbacks (for KosAgent internal sync)
     const callbacks = this.callbacks.get(sessionId);
     if (callbacks?.onStateChange) {
       callbacks.onStateChange(newState);
@@ -1413,12 +1413,12 @@ export function getPathHint(targetPath: string, plansFolderPath: string, dataFol
   }
 
   // Case: Writing to workspace root instead of session
-  if (normalizedTarget.includes('/.craft-agent/workspaces/') && !normalizedTarget.includes('/sessions/')) {
+  if (normalizedTarget.includes('/.kos/workspaces/') && !normalizedTarget.includes('/sessions/')) {
     return 'Hint: Write to the session plans or data folder, not the workspace root.';
   }
 
-  // Case: Writing outside .craft-agent entirely
-  if (!normalizedTarget.includes('/.craft-agent/')) {
+  // Case: Writing outside .kos entirely
+  if (!normalizedTarget.includes('/.kos/')) {
     return 'Hint: Files must be written to the session plans or data folder. Use plansFolderPath or dataFolderPath from <session_state>.';
   }
 
@@ -1726,7 +1726,7 @@ export function shouldAllowToolInMode(
   // Handle MCP tools - allow read-only, block write operations
   if (toolName.startsWith('mcp__')) {
     // Always allow documentation tools (read-only, always available)
-    if (toolName.startsWith('mcp__craft-agents-docs__')) {
+    if (toolName.startsWith('mcp__kos-docs__')) {
       return { allowed: true };
     }
 
@@ -1748,6 +1748,8 @@ export function shouldAllowToolInMode(
         'mcp__session__transform_data',
         'mcp__session__render_template',
         'mcp__session__call_llm',
+        'mcp__session__browser_open',
+        'mcp__session__browser_snapshot',
       ];
       if (readOnlySessionTools.includes(toolName)) {
         return { allowed: true };

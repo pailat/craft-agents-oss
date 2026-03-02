@@ -63,7 +63,7 @@ export async function handleExcalidrawValidate(
             valid: false,
             error: `Unknown element types: ${unique.join(', ')}`,
             validTypes: [...VALID_ELEMENT_TYPES],
-            suggestion: 'Check the element types against ~/.craft-agent/docs/excalidraw.md',
+            suggestion: 'Check the element types against ~/.kos/docs/excalidraw.md',
           }, null, 2),
         }],
         isError: true,

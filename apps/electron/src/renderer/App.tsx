@@ -13,7 +13,7 @@ import type { AppShellContextType } from '@/context/AppShellContext'
 import { OnboardingWizard, ReauthScreen } from '@/components/onboarding'
 import { ResetConfirmationDialog } from '@/components/ResetConfirmationDialog'
 import { SplashScreen } from '@/components/SplashScreen'
-import { TooltipProvider } from '@craft-agent/ui'
+import { TooltipProvider } from '@kos/ui'
 import { FocusProvider } from '@/context/FocusContext'
 import { ModalProvider } from '@/context/ModalContext'
 import { useWindowCloseHandler } from '@/hooks/useWindowCloseHandler'
@@ -24,7 +24,7 @@ import { useUpdateChecker } from '@/hooks/useUpdateChecker'
 import { NavigationProvider } from '@/contexts/NavigationContext'
 import { navigate, routes } from './lib/navigate'
 import { stripMarkdown } from './utils/text'
-import { extractWorkspaceSlugFromPath } from '@craft-agent/shared/utils/workspace-slug'
+import { extractWorkspaceSlugFromPath } from '@kos/shared/utils/workspace-slug'
 import { initRendererPerf } from './lib/perf'
 import {
   initializeSessionsAtom,
@@ -51,7 +51,7 @@ import {
   CodePreviewOverlay,
   DocumentFormattedMarkdownOverlay,
   JSONPreviewOverlay,
-} from '@craft-agent/ui'
+} from '@kos/ui'
 import { useLinkInterceptor, type FilePreviewState } from '@/hooks/useLinkInterceptor'
 import { getFileManagerName } from '@/lib/platform'
 import { ActionRegistryProvider } from '@/actions'
@@ -608,6 +608,19 @@ export default function App() {
       // it happens even if CMD+R occurs during compaction
       if (event.type === 'info' && event.statusType === 'compaction_complete') {
         window.dispatchEvent(new CustomEvent('craft:compaction-complete', {
+          detail: { sessionId }
+        }))
+      }
+
+      // Dispatch window events for browser panel open/close
+      // AppShell listens for these to control right sidebar visibility and panel type
+      if (event.type === 'browser_panel_open') {
+        window.dispatchEvent(new CustomEvent('craft:browser-panel-open', {
+          detail: { sessionId, url: event.url, requestId: event.requestId }
+        }))
+      }
+      if (event.type === 'browser_panel_close') {
+        window.dispatchEvent(new CustomEvent('craft:browser-panel-close', {
           detail: { sessionId }
         }))
       }
@@ -1357,7 +1370,7 @@ export default function App() {
     openNewChat,
   ])
 
-  // Platform actions for @craft-agent/ui components (overlays, etc.)
+  // Platform actions for @kos/ui components (overlays, etc.)
   // Memoized to prevent re-renders when these callbacks don't change
   // NOTE: Must be defined before early returns to maintain consistent hook order
   const platformActions = useMemo(() => ({

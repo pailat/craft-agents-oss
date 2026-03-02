@@ -50,7 +50,7 @@
 }
 
 /* =============================================================================
-   CRAFT AGENT THEME - 6 Color System
+   KOS THEME - 6 Color System
 
    Base colors:
    - background: Light/dark surface
@@ -1124,7 +1124,7 @@ html.dark[data-scenic] .fullscreen-overlay-background {
 
 /* ============================================================================
    Excalidraw Viewer
-   Map Craft Agent theme vars to Excalidraw's internal CSS vars.
+   Map Kos theme vars to Excalidraw's internal CSS vars.
    viewBackgroundColor is set to 'transparent' in code so the container
    inherits from the app background.
    ============================================================================ */

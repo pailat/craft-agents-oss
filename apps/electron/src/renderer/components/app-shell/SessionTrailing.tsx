@@ -2,7 +2,7 @@ import { formatDistanceToNow, formatDistanceToNowStrict } from "date-fns"
 import type { Locale } from "date-fns"
 import { ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Tooltip, TooltipTrigger, TooltipContent } from "@craft-agent/ui"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@kos/ui"
 import type { SessionMeta } from "@/atoms/sessions"
 import { shortTimeLocale } from "@/utils/session"
 

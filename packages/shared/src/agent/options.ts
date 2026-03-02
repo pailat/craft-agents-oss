@@ -4,7 +4,7 @@ import { homedir } from "os";
 import { existsSync, readFileSync, writeFileSync, unlinkSync, readdirSync } from "fs";
 import { debug } from "../utils/debug";
 
-declare const CRAFT_AGENT_CLI_VERSION: string | undefined;
+declare const KOS_AGENT_CLI_VERSION: string | undefined;
 
 let customPathToClaudeCodeExecutable: string | null = null;
 let customInterceptorPath: string | null = null;
@@ -212,13 +212,13 @@ export function getDefaultOptions(envOverrides?: Record<string, string>): Partia
                 ...process.env,
                 ...envOverrides,
                 // Propagate debug mode from argv flag OR existing env var
-                CRAFT_DEBUG: (process.argv.includes('--debug') || process.env.CRAFT_DEBUG === '1') ? '1' : '0',
+                KOS_DEBUG: (process.argv.includes('--debug') || process.env.KOS_DEBUG === '1') ? '1' : '0',
             }
         };
     }
 
-    if (typeof CRAFT_AGENT_CLI_VERSION !== 'undefined' && CRAFT_AGENT_CLI_VERSION != null) {
-        const baseDir = join(homedir(), '.local', 'share', 'craft', 'versions', CRAFT_AGENT_CLI_VERSION);
+    if (typeof KOS_AGENT_CLI_VERSION !== 'undefined' && KOS_AGENT_CLI_VERSION != null) {
+        const baseDir = join(homedir(), '.local', 'share', 'craft', 'versions', KOS_AGENT_CLI_VERSION);
         return {
             pathToClaudeCodeExecutable: join(baseDir, 'claude-agent-sdk', 'cli.js'),
             // Use the compiled binary itself as the runtime via BUN_BE_BUN=1
@@ -232,7 +232,7 @@ export function getDefaultOptions(envOverrides?: Record<string, string>): Partia
                 BUN_BE_BUN: '1',
                 ...envOverrides,
                 // Propagate debug mode from argv flag OR existing env var
-                CRAFT_DEBUG: (process.argv.includes('--debug') || process.env.CRAFT_DEBUG === '1') ? '1' : '0',
+                KOS_DEBUG: (process.argv.includes('--debug') || process.env.KOS_DEBUG === '1') ? '1' : '0',
             }
         }
     }
@@ -242,7 +242,7 @@ export function getDefaultOptions(envOverrides?: Record<string, string>): Partia
             ...process.env,
             ...envOverrides,
             // Propagate debug mode from argv flag OR existing env var
-            CRAFT_DEBUG: (process.argv.includes('--debug') || process.env.CRAFT_DEBUG === '1') ? '1' : '0',
+            KOS_DEBUG: (process.argv.includes('--debug') || process.env.KOS_DEBUG === '1') ? '1' : '0',
         }
     };
 }

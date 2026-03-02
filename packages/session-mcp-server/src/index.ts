@@ -3,7 +3,7 @@
  * Session MCP Server
  *
  * This MCP server provides session-scoped tools to Codex via stdio transport.
- * It uses the shared handlers from @craft-agent/session-tools-core to ensure
+ * It uses the shared handlers from @kos/session-tools-core to ensure
  * feature parity with Claude's session-scoped tools.
  *
  * Callback Communication:
@@ -17,7 +17,7 @@
  *
  * Arguments:
  *   --session-id: Unique session identifier
- *   --workspace-root: Path to workspace folder (~/.craft-agent/workspaces/{id})
+ *   --workspace-root: Path to workspace folder (~/.kos/workspaces/{id})
  *   --plans-folder: Path to session's plans folder
  */
 
@@ -46,7 +46,7 @@ import {
   // Helpers
   loadSourceConfig as loadSourceConfigFromHelpers,
   errorResponse,
-} from '@craft-agent/session-tools-core';
+} from '@kos/session-tools-core';
 
 // ============================================================
 // Types
@@ -216,8 +216,8 @@ function createCodexContext(config: SessionConfig): SessionToolContext {
     // Preferences: write directly to preferences.json
     updatePreferences: (updates: Record<string, unknown>) => {
       // Resolve preferences path from config dir (parent of workspaces dir)
-      // workspaceRootPath = ~/.craft-agent/workspaces/{id}
-      // preferencesPath = ~/.craft-agent/preferences.json
+      // workspaceRootPath = ~/.kos/workspaces/{id}
+      // preferencesPath = ~/.kos/preferences.json
       const configDir = join(workspaceRootPath, '..', '..');
       const prefsPath = join(configDir, 'preferences.json');
       try {
@@ -257,23 +257,23 @@ function createSessionTools(): Tool[] {
 }
 
 // ============================================================
-// Craft Agents Docs Upstream Proxy
+// Kos Docs Upstream Proxy
 // ============================================================
 
-const DOCS_MCP_URL = 'https://agents.craft.do/docs/mcp';
+const DOCS_MCP_URL = 'https://kos.ai/docs/mcp';
 
 /** Cached upstream client + tool list */
 let docsClient: Client | null = null;
 let docsTools: Tool[] = [];
 
 /**
- * Connect to the craft-agents-docs MCP server and fetch its tool definitions.
+ * Connect to the Kos docs MCP server and fetch its tool definitions.
  * Falls back gracefully if the server is unreachable (tools will just be empty).
  */
 async function connectDocsUpstream(): Promise<void> {
   try {
     const client = new Client(
-      { name: 'craft-agent-session-proxy', version: '1.0.0' },
+      { name: 'kos-session-proxy', version: '1.0.0' },
       { capabilities: {} }
     );
 
@@ -284,9 +284,9 @@ async function connectDocsUpstream(): Promise<void> {
     docsTools = (result.tools || []) as Tool[];
     docsClient = client;
 
-    console.error(`Craft Agents Docs proxy connected: ${docsTools.length} tools`);
+    console.error(`Kos Docs proxy connected: ${docsTools.length} tools`);
   } catch (err) {
-    console.error(`Craft Agents Docs proxy connection failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
+    console.error(`Kos Docs proxy connection failed (non-fatal): ${err instanceof Error ? err.message : String(err)}`);
     docsClient = null;
     docsTools = [];
   }
@@ -300,7 +300,7 @@ async function callDocsUpstream(
   args: Record<string, unknown>
 ): Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }> {
   if (!docsClient) {
-    return errorResponse(`Craft Agents Docs server is not connected. Tool '${name}' unavailable.`);
+    return errorResponse(`Kos Docs server is not connected. Tool '${name}' unavailable.`);
   }
 
   try {
@@ -353,7 +353,7 @@ async function handleCallLlm(
   }
 
   // Fallback path: HTTP callback to agent (for Copilot where PreToolUse doesn't fire for MCP tools).
-  // Uses callbackPort from CLI arg (--callback-port) or env var (CRAFT_LLM_CALLBACK_PORT).
+  // Uses callbackPort from CLI arg (--callback-port) or env var (KOS_LLM_CALLBACK_PORT).
   if (config.callbackPort) {
     try {
       const resp = await fetch(`http://127.0.0.1:${config.callbackPort}/call-llm`, {
@@ -376,7 +376,7 @@ async function handleCallLlm(
 
   return errorResponse(
     'call_llm requires either PreToolUse intercept (_precomputedResult) or ' +
-    'HTTP callback (CRAFT_LLM_CALLBACK_PORT). Neither is available.'
+    'HTTP callback (KOS_LLM_CALLBACK_PORT). Neither is available.'
   );
 }
 
@@ -429,7 +429,7 @@ async function handleSpawnSession(
 
   return errorResponse(
     'spawn_session requires either PreToolUse intercept (_precomputedResult) or ' +
-    'HTTP callback (CRAFT_LLM_CALLBACK_PORT). Neither is available.'
+    'HTTP callback (KOS_LLM_CALLBACK_PORT). Neither is available.'
   );
 }
 
@@ -487,7 +487,7 @@ async function main() {
     workspaceRootPath,
     plansFolderPath,
     // CLI arg takes priority, env var as fallback (Copilot CLI may not forward env to subprocesses)
-    callbackPort: callbackPort || process.env.CRAFT_LLM_CALLBACK_PORT,
+    callbackPort: callbackPort || process.env.KOS_LLM_CALLBACK_PORT,
   };
 
   // Create the Codex context
@@ -496,7 +496,7 @@ async function main() {
   // Create MCP server
   const server = new Server(
     {
-      name: 'craft-agent-session',
+      name: 'kos-session',
       version: '0.3.1',
     },
     {

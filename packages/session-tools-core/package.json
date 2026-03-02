@@ -1,5 +1,5 @@
 {
-  "name": "@craft-agent/session-tools-core",
+  "name": "@kos/session-tools-core",
   "version": "0.5.1",
   "description": "Shared utilities for session-scoped tools (Claude and Codex)",
   "type": "module",
@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@craft-agent/mermaid": "workspace:*",
+    "@kos/mermaid": "workspace:*",
     "zod": "^3.23.0",
     "zod-to-json-schema": "^3.25.0",
     "gray-matter": "^4.0.3"
