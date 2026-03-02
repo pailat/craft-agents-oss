@@ -5,9 +5,9 @@
  */
 
 import { app } from 'electron'
-import type { ModelFetcher, ModelFetchResult, ModelFetcherCredentials } from '@craft-agent/shared/config'
-import type { LlmConnection } from '@craft-agent/shared/config'
-import { fetchBackendModels } from '@craft-agent/shared/agent/backend'
+import type { ModelFetcher, ModelFetchResult, ModelFetcherCredentials } from '@kos/shared/config'
+import type { LlmConnection } from '@kos/shared/config'
+import { fetchBackendModels } from '@kos/shared/agent/backend'
 
 export class BedrockVertexModelFetcher implements ModelFetcher {
   /** No periodic refresh — models come from persisted cache / registry only */

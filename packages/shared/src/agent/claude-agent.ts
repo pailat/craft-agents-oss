@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { getSystemPrompt } from '../prompts/system.ts';
 import { BaseAgent, type MiniAgentConfig, MINI_AGENT_TOOLS, MINI_AGENT_MCP_KEYS } from './base-agent.ts';
 import type { BackendConfig, PostInitResult, PermissionRequestType, SdkMcpServerConfig } from './backend/types.ts';
-// Plan types are used by UI components; not needed in craft-agent.ts since Safe Mode is user-controlled
+// Plan types are used by UI components; not needed in claude-agent.ts since Safe Mode is user-controlled
 import { parseError, type AgentError } from './errors.ts';
 import { runErrorDiagnostics } from './diagnostics.ts';
 import { loadStoredConfig, loadConfigDefaults, type Workspace, type AuthType, getDefaultLlmConnection, getLlmConnection } from '../config/storage.ts';
@@ -83,10 +83,10 @@ export {
   PERMISSION_MODE_ORDER,
   PERMISSION_MODE_CONFIG,
 } from './mode-manager.ts';
-// Documentation is served via local files at ~/.craft-agent/docs/
+// Documentation is served via local files at ~/.kos/docs/
 
 // Import and re-export AgentEvent from core (single source of truth)
-import type { AgentEvent } from '@craft-agent/core/types';
+import type { AgentEvent } from '@kos/core/types';
 export type { AgentEvent };
 
 // Stateless tool matching — pure functions for SDK message → AgentEvent conversion
@@ -456,6 +456,19 @@ export class ClaudeAgent extends BaseAgent {
       queryFn: (request) => this.queryLlm(request),
       spawnSessionFn: (input) => this.preExecuteSpawnSession(input),
       onSessionStatusChanged: (statusId) => this.onStatusChanged?.(statusId),
+      // Browser panel — async callbacks routed through sessions.ts to renderer
+      browserOpenFn: async (url) => {
+        if (!this.onBrowserOpen) throw new Error('Browser panel not available in this environment');
+        return this.onBrowserOpen(url);
+      },
+      browserSnapshotFn: async () => {
+        if (!this.onBrowserSnapshot) throw new Error('Browser panel not available');
+        return this.onBrowserSnapshot();
+      },
+      browserActionFn: async (action, ref, value) => {
+        if (!this.onBrowserAction) throw new Error('Browser panel not available');
+        return this.onBrowserAction(action, ref, value);
+      },
     });
 
     // Start config watcher for hot-reloading source changes
@@ -667,11 +680,11 @@ export class ClaudeAgent extends BaseAgent {
       const fullMcpServers: Options['mcpServers'] = {
         // Session-scoped tools (SubmitPlan, source_test, update_user_preferences, transform_data, etc.)
         session: getSessionScopedTools(sessionId, this.workspaceRootPath),
-        // Craft Agents documentation - always available for searching setup guides
+        // Kos documentation - always available for searching setup guides
         // This is a public Mintlify MCP server, no auth needed
-        'craft-agents-docs': {
+        'kos-docs': {
           type: 'http',
-          url: 'https://agents.craft.do/docs/mcp',
+          url: 'https://kos.ai/docs/mcp',
         },
         // Per-source proxy servers from centralized MCP pool (MCP + API sources)
         // Each source gets its own SDK server keyed by slug (e.g., 'linear', 'github', 'gmail')
@@ -788,7 +801,7 @@ export class ClaudeAgent extends BaseAgent {
           // Build user-defined hooks from automations.json using the workspace-level AutomationSystem
           const userHooks: Partial<Record<string, SdkAutomationCallbackMatcher[]>> = this.automationSystem?.buildSdkHooks() ?? {};
           if (Object.keys(userHooks).length > 0) {
-            debug('[CraftAgent] User SDK hooks loaded:', Object.keys(userHooks).join(', '));
+            debug('[ClaudeAgent] User SDK hooks loaded:', Object.keys(userHooks).join(', '));
           }
 
           // Internal hooks for permission handling and logging
@@ -2196,11 +2209,11 @@ export class ClaudeAgent extends BaseAgent {
 // ============================================================
 // Backward Compatibility Exports
 // ============================================================
-// These aliases allow gradual migration from CraftAgent to ClaudeAgent.
+// These aliases allow gradual migration from KosAgent to ClaudeAgent.
 // Once all consumers are updated, these can be removed.
 
 /** @deprecated Use ClaudeAgent instead */
-export { ClaudeAgent as CraftAgent };
+export { ClaudeAgent as KosAgent };
 
 /** @deprecated Use ClaudeAgentConfig instead */
-export type { ClaudeAgentConfig as CraftAgentConfig };
+export type { ClaudeAgentConfig as KosAgentConfig };

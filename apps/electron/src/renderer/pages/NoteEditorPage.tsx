@@ -37,7 +37,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { Tooltip, TooltipTrigger, TooltipContent } from '@craft-agent/ui'
+import { Tooltip, TooltipTrigger, TooltipContent } from '@kos/ui'
 import {
   StyledDropdownMenuItem,
   StyledDropdownMenuSeparator,
@@ -45,7 +45,7 @@ import {
 import { PanelHeader } from '@/components/app-shell/PanelHeader'
 import { HeaderMenu } from '@/components/ui/HeaderMenu'
 import { routes } from '@/lib/navigate'
-import type { LoadedNote } from '@craft-agent/shared/notes'
+import type { LoadedNote } from '@kos/shared/notes'
 
 // =============================================================================
 // Tiptap Toolbar Button

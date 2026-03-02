@@ -13,8 +13,8 @@ import {
   StyledDropdownMenuSubContent,
 } from "@/components/ui/styled-dropdown"
 import * as Icons from "lucide-react"
-import { Tooltip, TooltipTrigger, TooltipContent } from "@craft-agent/ui"
-import { CraftAgentsSymbol } from "./icons/CraftAgentsSymbol"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@kos/ui"
+import { KosSymbol } from "./icons/KosSymbol"
 import { SquarePenRounded } from "./icons/SquarePenRounded"
 import { TopBarButton } from "./ui/TopBarButton"
 import {
@@ -26,7 +26,7 @@ import {
 } from "../../shared/menu-schema"
 import type { MenuItem, MenuSection, SettingsMenuItem } from "../../shared/menu-schema"
 import { SETTINGS_ICONS } from "./icons/SettingsIcons"
-import { getDocUrl } from '@craft-agent/shared/docs/doc-links'
+import { getDocUrl } from '@kos/shared/docs/doc-links'
 
 // Map of action handlers for menu items that need custom behavior
 type MenuActionHandlers = {
@@ -201,7 +201,7 @@ export function AppMenu({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <TopBarButton aria-label="Craft menu">
-            <CraftAgentsSymbol className="h-4 text-accent" />
+            <KosSymbol className="h-4 text-accent" />
           </TopBarButton>
         </DropdownMenuTrigger>
         <StyledDropdownMenuContent align="start" minWidth="min-w-48">
@@ -265,7 +265,7 @@ export function AppMenu({
               Help
             </StyledDropdownMenuSubTrigger>
             <StyledDropdownMenuSubContent>
-              <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.craft.do/docs')}>
+              <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://kos.ai/docs')}>
                 <Icons.HelpCircle className="h-3.5 w-3.5" />
                 Help & Documentation
                 <Icons.ExternalLink className="h-3 w-3 ml-auto text-muted-foreground" />
@@ -317,7 +317,7 @@ export function AppMenu({
           {/* Quit */}
           <StyledDropdownMenuItem onClick={() => window.electronAPI.menuQuit()}>
             <Icons.LogOut className="h-3.5 w-3.5" />
-            Quit Craft Agents
+            Quit Kos
             {quitHotkey && <DropdownMenuShortcut className="pl-6">{quitHotkey}</DropdownMenuShortcut>}
           </StyledDropdownMenuItem>
         </StyledDropdownMenuContent>

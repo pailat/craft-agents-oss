@@ -4,7 +4,7 @@ import { EntityPanel } from '@/components/ui/entity-panel'
 import { EntityIcon } from '@/components/ui/entity-icon'
 import { EntityListEmptyScreen } from '@/components/ui/entity-list-empty'
 import { noteSelection } from '@/hooks/useEntitySelection'
-import type { LoadedNote } from '@craft-agent/shared/notes'
+import type { LoadedNote } from '@kos/shared/notes'
 import { useMenuComponents } from '@/components/ui/menu-context'
 import { getFileManagerName } from '@/lib/platform'
 

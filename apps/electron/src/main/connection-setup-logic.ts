@@ -5,12 +5,12 @@
  * No dependency on ipcMain, sessionManager, credential manager, or file I/O.
  */
 
-import type { ModelDefinition } from '@craft-agent/shared/config/models'
+import type { ModelDefinition } from '@kos/shared/config/models'
 import {
   type LlmConnection,
   getDefaultModelsForConnection,
   getDefaultModelForConnection,
-} from '@craft-agent/shared/config'
+} from '@kos/shared/config'
 
 // ============================================================
 // Error Parsing
@@ -81,7 +81,7 @@ export const BUILT_IN_CONNECTION_TEMPLATES: Record<string, {
     piAuthProvider: 'github-copilot',
   },
   'pi-api-key': {
-    name: 'Craft Agents Backend (API Key)',
+    name: 'Kos Backend (API Key)',
     providerType: 'pi',
     authType: 'api_key',
     // piAuthProvider set dynamically from setup.piAuthProvider

@@ -1,8 +1,8 @@
 import { useMemo } from "react"
 import { Flag, CloudUpload } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { parseLabelEntry } from "@craft-agent/shared/labels"
-import { Spinner } from "@craft-agent/ui"
+import { parseLabelEntry } from "@kos/shared/labels"
+import { Spinner } from "@kos/ui"
 import { EntityListBadge } from "@/components/ui/entity-list-badge"
 import { EntityListLabelBadge } from "@/components/ui/entity-list-label-badge"
 import { ShareMenuItems } from "./SessionMenuParts"
@@ -12,9 +12,9 @@ import { useOptionalAppShellContext } from "@/context/AppShellContext"
 import * as storage from "@/lib/local-storage"
 import { useSessionListContext } from "@/context/SessionListContext"
 import type { SessionMeta } from "@/atoms/sessions"
-import { PERMISSION_MODE_CONFIG } from "@craft-agent/shared/agent/modes"
+import { PERMISSION_MODE_CONFIG } from "@kos/shared/agent/modes"
 import { hasUnreadMeta } from "@/utils/session"
-import type { LabelConfig } from "@craft-agent/shared/labels"
+import type { LabelConfig } from "@kos/shared/labels"
 
 interface SessionBadgesProps {
   item: SessionMeta

@@ -31813,7 +31813,7 @@ var import_node_path2 = require("node:path");
 var import_node_os = require("node:os");
 async function handleConfigValidate(ctx, args) {
   const { target, sourceSlug } = args;
-  const craftAgentRoot = import_node_path2.join(import_node_os.homedir(), ".craft-agent");
+  const craftAgentRoot = import_node_path2.join(import_node_os.homedir(), ".kos");
   if (ctx.validators) {
     try {
       let result;
@@ -32346,7 +32346,7 @@ async function handleMermaidValidate(_ctx, args) {
         text: JSON.stringify({
           valid: false,
           error: errorMessage,
-          suggestion: "Check the syntax against ~/.craft-agent/docs/mermaid.md"
+          suggestion: "Check the syntax against ~/.kos/docs/mermaid.md"
         }, null, 2)
       }],
       isError: true
@@ -33360,7 +33360,7 @@ The plan will be displayed to the user in a special formatted view.
       description: `Validate Craft Agent configuration files.
 
 **Targets:**
-- config: Validates ~/.craft-agent/config.json
+- config: Validates ~/.kos/config.json
 - sources: Validates source config.json files
 - statuses: Validates statuses config
 - preferences: Validates preferences.json
@@ -33404,7 +33404,7 @@ Checks slug format, SKILL.md existence, YAML frontmatter, and required fields.`,
       description: `Validate Mermaid diagram syntax before outputting.
 
 Use this when creating complex diagrams or debugging syntax issues.
-Uses @craft-agent/mermaid parser for accurate validation.`,
+Uses @kos/mermaid parser for accurate validation.`,
       inputSchema: {
         type: "object",
         properties: {

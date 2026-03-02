@@ -207,7 +207,7 @@ export function qualifySkillName(
   const skill = input.skill as string | undefined;
   if (!skill) return { modified: false, input };
 
-  // Extract the bare slug — strip any existing qualifier (e.g. "CraftAgentWS:commit" → "commit")
+  // Extract the bare slug — strip any existing qualifier (e.g. "KosAgentWS:commit" → "commit")
   const bareSlug = skill.includes(':') ? skill.split(':').pop()! : skill;
   if (!bareSlug) return { modified: false, input };
 
@@ -475,7 +475,7 @@ export interface PrerequisiteManagerLike {
 }
 
 /** Built-in MCP servers that are always available (not user sources) */
-const BUILT_IN_MCP_SERVERS = new Set(['session', 'craft-agents-docs']);
+const BUILT_IN_MCP_SERVERS = new Set(['session', 'kos-docs']);
 
 /** File write tools that require permission in ask mode */
 const FILE_WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit']);

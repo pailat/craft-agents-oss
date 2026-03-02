@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="-120 -120 1264 1264" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Apple macOS squircle (continuous-curvature superellipse) -->
+    <clipPath id="squircle">
+      <path d="
+        M 512 0
+        C 693 0 775 0 838 28
+        C 889 51 931 85 960 128
+        C 1000 192 1024 300 1024 512
+        C 1024 724 1000 832 960 896
+        C 931 939 889 973 838 996
+        C 775 1024 693 1024 512 1024
+        C 331 1024 249 1024 186 996
+        C 135 973 93 939 64 896
+        C 24 832 0 724 0 512
+        C 0 300 24 192 64 128
+        C 93 85 135 51 186 28
+        C 249 0 331 0 512 0
+        Z"/>
+    </clipPath>
+    <!-- Subtle top-down gradient for depth -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F0EDF4"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background with Apple squircle shape -->
+  <g clip-path="url(#squircle)">
+    <!-- White-to-light-purple gradient background -->
+    <rect width="1024" height="1024" fill="url(#bgGrad)"/>
+    <!-- Kos Symbol: concentric rings + spark dot -->
+    <!-- Outer ring - Core purple #532b88 -->
+    <circle cx="512" cy="512" r="300" stroke="#532b88" stroke-width="56" fill="none"/>
+    <!-- Inner ring - Core purple #532b88 -->
+    <circle cx="512" cy="512" r="210" stroke="#532b88" stroke-width="56" fill="none"/>
+    <!-- Spark center dot - Orange #FC7A1E -->
+    <circle cx="512" cy="512" r="120" fill="#FC7A1E"/>
+  </g>
+</svg>

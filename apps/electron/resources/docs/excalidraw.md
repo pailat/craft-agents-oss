@@ -1,6 +1,6 @@
 # Excalidraw Diagrams
 
-Craft Agent renders `excalidraw` code blocks as interactive Excalidraw drawings.
+Kos renders `excalidraw` code blocks as interactive Excalidraw drawings.
 Diagrams support zoom, pan, and are rendered with the app's current theme.
 
 ## Usage
@@ -208,7 +208,7 @@ Returns `{ valid: true }` or `{ valid: false, error: "..." }`.
 
 - Keep element counts reasonable for inline rendering (<50 elements)
 - Diagrams are interactive: users can zoom and pan in the viewer
-- Theme (dark/light) is applied automatically by Craft Agent
+- Theme (dark/light) is applied automatically by Kos
 - Click the expand button for a fullscreen view
 - Use `viewBackgroundColor` in `appState` to control canvas background (or omit for transparent)
 - Use `roundness: { "type": 3 }` for rounded corners on rectangles

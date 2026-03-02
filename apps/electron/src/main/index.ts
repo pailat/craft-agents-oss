@@ -71,21 +71,21 @@ import { initModelRefreshService, getModelRefreshService } from './model-fetcher
 import { createApplicationMenu } from './menu'
 import { WindowManager } from './window-manager'
 import { loadWindowState, saveWindowState } from './window-state'
-import { getWorkspaces, loadStoredConfig, addWorkspace, saveConfig } from '@craft-agent/shared/config'
-import { getDefaultWorkspacesDir } from '@craft-agent/shared/workspaces'
-import { initializeDocs } from '@craft-agent/shared/docs'
-import { initializeReleaseNotes } from '@craft-agent/shared/release-notes'
-import { ensureDefaultPermissions } from '@craft-agent/shared/agent/permissions-config'
-import { ensureToolIcons, ensurePresetThemes } from '@craft-agent/shared/config'
-import { setBundledAssetsRoot } from '@craft-agent/shared/utils'
-import { initializeBackendHostRuntime } from '@craft-agent/shared/agent/backend'
-import { setPowerShellValidatorRoot } from '@craft-agent/shared/agent'
+import { getWorkspaces, loadStoredConfig, addWorkspace, saveConfig } from '@kos/shared/config'
+import { getDefaultWorkspacesDir } from '@kos/shared/workspaces'
+import { initializeDocs } from '@kos/shared/docs'
+import { initializeReleaseNotes } from '@kos/shared/release-notes'
+import { ensureDefaultPermissions } from '@kos/shared/agent/permissions-config'
+import { ensureToolIcons, ensurePresetThemes } from '@kos/shared/config'
+import { setBundledAssetsRoot } from '@kos/shared/utils'
+import { initializeBackendHostRuntime } from '@kos/shared/agent/backend'
+import { setPowerShellValidatorRoot } from '@kos/shared/agent'
 import { handleDeepLink } from './deep-link'
 import { registerThumbnailScheme, registerThumbnailHandler } from './thumbnail-protocol'
 import log, { isDebugMode, mainLog, getLogFilePath } from './logger'
-import { setPerfEnabled, enableDebug } from '@craft-agent/shared/utils'
-import { registerPiModelResolver } from '@craft-agent/shared/config'
-import { getPiModelsForAuthProvider, getAllPiModels } from '@craft-agent/shared/config'
+import { setPerfEnabled, enableDebug } from '@kos/shared/utils'
+import { registerPiModelResolver } from '@kos/shared/config'
+import { getPiModelsForAuthProvider, getAllPiModels } from '@kos/shared/config'
 import { initNotificationService, clearBadgeCount, initBadgeIcon, initInstanceBadge } from './notifications'
 import { checkForUpdatesOnLaunch, setWindowManager as setAutoUpdateWindowManager, isUpdating } from './auto-update'
 import { validateGitBashPath } from './git-bash'
@@ -95,7 +95,7 @@ log.initialize()
 
 // Enable debug/perf in dev mode (running from source)
 if (isDebugMode) {
-  process.env.CRAFT_DEBUG = '1'
+  process.env.KOS_DEBUG = '1'
   enableDebug()
   setPerfEnabled(true)
 }
@@ -106,9 +106,9 @@ registerPiModelResolver((piAuthProvider) =>
   piAuthProvider ? getPiModelsForAuthProvider(piAuthProvider) : getAllPiModels()
 )
 
-// Custom URL scheme for deeplinks (e.g., craftagents://auth-complete)
-// Supports multi-instance dev: CRAFT_DEEPLINK_SCHEME env var (craftagents1, craftagents2, etc.)
-const DEEPLINK_SCHEME = process.env.CRAFT_DEEPLINK_SCHEME || 'craftagents'
+// Custom URL scheme for deeplinks (e.g., kos://auth-complete)
+// Supports multi-instance dev: KOS_DEEPLINK_SCHEME env var (kos1, kos2, etc.)
+const DEEPLINK_SCHEME = process.env.KOS_DEEPLINK_SCHEME || 'kos'
 
 let windowManager: WindowManager | null = null
 let sessionManager: SessionManager | null = null
@@ -117,10 +117,10 @@ let sessionManager: SessionManager | null = null
 let pendingDeepLink: string | null = null
 
 // Set app name early (before app.whenReady) to ensure correct macOS menu bar title
-// Supports multi-instance dev: CRAFT_APP_NAME env var (e.g., "Craft Agents [1]")
-app.setName(process.env.CRAFT_APP_NAME || 'Craft Agents')
+// Supports multi-instance dev: KOS_APP_NAME env var (e.g., "Kos [1]")
+app.setName(process.env.KOS_APP_NAME || 'Kos')
 
-// Register as default protocol client for craftagents:// URLs
+// Register as default protocol client for kos:// URLs
 // This must be done before app.whenReady() on some platforms
 if (process.defaultApp) {
   // Development mode: need to pass the app path
@@ -257,10 +257,10 @@ app.whenReady().then(async () => {
   // Ensure default permissions file exists (copies bundled default.json on first run)
   ensureDefaultPermissions()
 
-  // Seed tool icons to ~/.craft-agent/tool-icons/ (copies bundled SVGs on first run)
+  // Seed tool icons to ~/.kos/tool-icons/ (copies bundled SVGs on first run)
   ensureToolIcons()
 
-  // Seed preset themes to ~/.craft-agent/themes/ (copies bundled theme JSONs on first run)
+  // Seed preset themes to ~/.kos/themes/ (copies bundled theme JSONs on first run)
   ensurePresetThemes()
 
   // Register thumbnail:// protocol handler (scheme was registered earlier, before app.whenReady)
@@ -286,8 +286,8 @@ app.whenReady().then(async () => {
     }
 
     // Multi-instance dev: show instance number badge on dock icon
-    // CRAFT_INSTANCE_NUMBER is set by detect-instance.sh for numbered folders
-    const instanceNum = process.env.CRAFT_INSTANCE_NUMBER
+    // KOS_INSTANCE_NUMBER is set by detect-instance.sh for numbered folders
+    const instanceNum = process.env.KOS_INSTANCE_NUMBER
     if (instanceNum) {
       const num = parseInt(instanceNum, 10)
       if (!isNaN(num) && num > 0) {
@@ -312,7 +312,7 @@ app.whenReady().then(async () => {
 
     // Restore persisted Git Bash path on Windows (must happen before any SDK subprocess spawn)
     if (process.platform === 'win32') {
-      const { getGitBashPath, clearGitBashPath } = await import('@craft-agent/shared/config')
+      const { getGitBashPath, clearGitBashPath } = await import('@kos/shared/config')
       const gitBashPath = getGitBashPath()
       if (gitBashPath) {
         const validation = await validateGitBashPath(gitBashPath)
@@ -331,7 +331,7 @@ app.whenReady().then(async () => {
     // before any renderer can send messages. The credential resolver uses lazy
     // import() so it doesn't depend on session manager being initialized first.
     const modelRefreshService = initModelRefreshService(async (slug: string) => {
-      const { getCredentialManager } = await import('@craft-agent/shared/credentials')
+      const { getCredentialManager } = await import('@kos/shared/credentials')
       const manager = getCredentialManager()
       const [apiKey, oauth] = await Promise.all([
         manager.getLlmApiKey(slug).catch(() => null),
@@ -360,7 +360,7 @@ app.whenReady().then(async () => {
     // Run credential health check at startup to detect issues early
     // (corruption, machine migration, missing credentials for default connection)
     try {
-      const { getCredentialManager } = await import('@craft-agent/shared/credentials')
+      const { getCredentialManager } = await import('@kos/shared/credentials')
       const credentialManager = getCredentialManager()
       const health = await credentialManager.checkHealth()
       if (!health.healthy) {
@@ -379,7 +379,7 @@ app.whenReady().then(async () => {
     // Runs after init so config and auth state are available.
     // Derives values from the default LLM connection instead of legacy config fields.
     try {
-      const { getLlmConnection, getDefaultLlmConnection } = await import('@craft-agent/shared/config')
+      const { getLlmConnection, getDefaultLlmConnection } = await import('@kos/shared/config')
       const workspaces = getWorkspaces()
       const defaultConnSlug = getDefaultLlmConnection()
       const defaultConn = defaultConnSlug ? getLlmConnection(defaultConnSlug) : null

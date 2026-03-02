@@ -5,7 +5,7 @@
  * instance of these tools with session-specific callbacks and state.
  *
  * This file is a thin adapter that wraps the shared handlers from
- * @craft-agent/session-tools-core for use with the Claude SDK.
+ * @kos/session-tools-core for use with the Claude SDK.
  *
  * All tool definitions, schemas, and handlers live in session-tools-core.
  * This adapter only handles:
@@ -30,7 +30,7 @@ import {
   // Types
   type ToolResult,
   type AuthRequest,
-} from '@craft-agent/session-tools-core';
+} from '@kos/session-tools-core';
 import { createLLMTool, type LLMQueryRequest, type LLMQueryResult } from './llm-tool.ts';
 import { createSpawnSessionTool, type SpawnSessionFn } from './spawn-session-tool.ts';
 
@@ -48,7 +48,7 @@ export type {
   GoogleService,
   SlackService,
   MicrosoftService,
-} from '@craft-agent/session-tools-core';
+} from '@kos/session-tools-core';
 
 // ============================================================
 // Session-Scoped Tool Callbacks
@@ -87,6 +87,15 @@ export interface SessionScopedToolCallbacks {
    * Routes through the session manager for in-memory update + UI notification.
    */
   onSessionStatusChanged?: (statusId: string) => void;
+
+  /**
+   * Browser panel control — async callbacks that resolve with results.
+   * Follows the same pattern as queryFn for call_llm.
+   * Only available in Electron (has webview support).
+   */
+  browserOpenFn?: (url: string) => Promise<{ title?: string }>;
+  browserSnapshotFn?: () => Promise<string>;
+  browserActionFn?: (action: string, ref: string, value?: string) => Promise<string>;
 }
 
 // Registry of callbacks keyed by sessionId
@@ -260,6 +269,23 @@ export function getSessionScopedTools(
     } else {
       return { error: 'Session status callback not available.' };
     }
+  };
+
+  // Wire browser panel callbacks (async, like queryFn)
+  ctx.browserOpen = async (url: string) => {
+    const callbacks = getSessionScopedToolCallbacks(sessionId);
+    if (!callbacks?.browserOpenFn) throw new Error('Browser panel not available');
+    return callbacks.browserOpenFn(url);
+  };
+  ctx.browserSnapshot = async () => {
+    const callbacks = getSessionScopedToolCallbacks(sessionId);
+    if (!callbacks?.browserSnapshotFn) throw new Error('Browser panel not open');
+    return callbacks.browserSnapshotFn();
+  };
+  ctx.browserAction = async (action: string, ref: string, value?: string) => {
+    const callbacks = getSessionScopedToolCallbacks(sessionId);
+    if (!callbacks?.browserActionFn) throw new Error('Browser panel not open');
+    return callbacks.browserActionFn(action, ref, value);
   };
 
   // Helper to create a tool from the canonical registry.

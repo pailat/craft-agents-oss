@@ -26,22 +26,22 @@ const VITE_BIN = join(ROOT_DIR, `node_modules/.bin/vite${BIN_EXT}`);
 const ELECTRON_BIN = join(ROOT_DIR, `node_modules/.bin/electron${BIN_EXT}`);
 
 // Multi-instance detection (matches detect-instance.sh logic)
-// Detects instance number from folder name suffix (e.g., craft-agents-1 → instance 1)
+// Detects instance number from folder name suffix (e.g., kos-1 → instance 1)
 function detectInstance(): void {
   // Don't override if already set (e.g., by sourcing detect-instance.sh first)
-  if (process.env.CRAFT_VITE_PORT) return;
+  if (process.env.KOS_VITE_PORT) return;
 
   const folderName = basename(ROOT_DIR);
   const match = folderName.match(/-(\d+)$/);
 
   if (match) {
     const instanceNum = match[1];
-    process.env.CRAFT_INSTANCE_NUMBER = instanceNum;
-    process.env.CRAFT_VITE_PORT = `${instanceNum}173`;
-    process.env.CRAFT_APP_NAME = `Craft Agents [${instanceNum}]`;
-    process.env.CRAFT_CONFIG_DIR = join(process.env.HOME || "", `.craft-agent-${instanceNum}`);
-    process.env.CRAFT_DEEPLINK_SCHEME = `craftagents${instanceNum}`;
-    console.log(`🔢 Instance ${instanceNum} detected: port=${process.env.CRAFT_VITE_PORT}, config=${process.env.CRAFT_CONFIG_DIR}`);
+    process.env.KOS_INSTANCE_NUMBER = instanceNum;
+    process.env.KOS_VITE_PORT = `${instanceNum}173`;
+    process.env.KOS_APP_NAME = `Kos [${instanceNum}]`;
+    process.env.KOS_CONFIG_DIR = join(process.env.HOME || "", `.kos-${instanceNum}`);
+    process.env.KOS_DEEPLINK_SCHEME = `kos${instanceNum}`;
+    console.log(`🔢 Instance ${instanceNum} detected: port=${process.env.KOS_VITE_PORT}, config=${process.env.KOS_CONFIG_DIR}`);
   }
 }
 
@@ -203,7 +203,7 @@ function getOAuthDefines(): Record<string, string> {
 
 // Get environment variables for electron process
 function getElectronEnv(): Record<string, string> {
-  const vitePort = process.env.CRAFT_VITE_PORT || "5173";
+  const vitePort = process.env.KOS_VITE_PORT || "5173";
 
   // Codex binary path is resolved at runtime by the binary-resolver module.
   // It checks: CODEX_PATH env var > bundled binary > local dev fork > system PATH.
@@ -212,10 +212,10 @@ function getElectronEnv(): Record<string, string> {
   return {
     ...process.env as Record<string, string>,
     VITE_DEV_SERVER_URL: `http://localhost:${vitePort}`,
-    CRAFT_CONFIG_DIR: process.env.CRAFT_CONFIG_DIR || "",
-    CRAFT_APP_NAME: process.env.CRAFT_APP_NAME || "Craft Agents",
-    CRAFT_DEEPLINK_SCHEME: process.env.CRAFT_DEEPLINK_SCHEME || "craftagents",
-    CRAFT_INSTANCE_NUMBER: process.env.CRAFT_INSTANCE_NUMBER || "",
+    KOS_CONFIG_DIR: process.env.KOS_CONFIG_DIR || "",
+    KOS_APP_NAME: process.env.KOS_APP_NAME || "Kos",
+    KOS_DEEPLINK_SCHEME: process.env.KOS_DEEPLINK_SCHEME || "kos",
+    KOS_INSTANCE_NUMBER: process.env.KOS_INSTANCE_NUMBER || "",
   };
 }
 
@@ -334,7 +334,7 @@ async function main(): Promise<void> {
   // Build MCP servers for Codex sessions
   await buildMcpServers();
 
-  const vitePort = process.env.CRAFT_VITE_PORT || "5173";
+  const vitePort = process.env.KOS_VITE_PORT || "5173";
   const oauthDefines = getOAuthDefines();
 
   // Kill any existing process on the Vite port

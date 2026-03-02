@@ -1,6 +1,6 @@
-appId: com.lukilabs.craft-agent
-productName: Craft Agents
-copyright: Copyright © 2025 Craft Docs Ltd.
+appId: com.kos.app
+productName: Kos
+copyright: Copyright © 2025 Kos Inc.
 
 electronVersion: "39.2.7"
 
@@ -64,17 +64,17 @@ mac:
     # These enable the system permission dialog when an MCP server
     # accesses a protected resource. Harmless if unused — macOS only
     # shows the dialog when the API is actually accessed.
-    NSCalendarsFullAccessUsageDescription: "Craft Agents needs access to your calendars to manage events through connected tools."
-    NSRemindersFullAccessUsageDescription: "Craft Agents needs access to your reminders to manage tasks through connected tools."
-    NSContactsUsageDescription: "Craft Agents needs access to your contacts through connected tools."
-    NSPhotoLibraryUsageDescription: "Craft Agents needs access to your photos through connected tools."
-    NSCameraUsageDescription: "Craft Agents needs camera access through connected tools."
-    NSMicrophoneUsageDescription: "Craft Agents needs microphone access through connected tools."
-    NSLocationUsageDescription: "Craft Agents needs location access through connected tools."
-    NSLocationWhenInUseUsageDescription: "Craft Agents needs location access through connected tools."
-    NSDocumentsFolderUsageDescription: "Craft Agents needs access to your Documents folder through connected tools."
-    NSDesktopFolderUsageDescription: "Craft Agents needs access to your Desktop folder through connected tools."
-    NSDownloadsFolderUsageDescription: "Craft Agents needs access to your Downloads folder through connected tools."
+    NSCalendarsFullAccessUsageDescription: "Kos needs access to your calendars to manage events through connected tools."
+    NSRemindersFullAccessUsageDescription: "Kos needs access to your reminders to manage tasks through connected tools."
+    NSContactsUsageDescription: "Kos needs access to your contacts through connected tools."
+    NSPhotoLibraryUsageDescription: "Kos needs access to your photos through connected tools."
+    NSCameraUsageDescription: "Kos needs camera access through connected tools."
+    NSMicrophoneUsageDescription: "Kos needs microphone access through connected tools."
+    NSLocationUsageDescription: "Kos needs location access through connected tools."
+    NSLocationWhenInUseUsageDescription: "Kos needs location access through connected tools."
+    NSDocumentsFolderUsageDescription: "Kos needs access to your Documents folder through connected tools."
+    NSDesktopFolderUsageDescription: "Kos needs access to your Desktop folder through connected tools."
+    NSDownloadsFolderUsageDescription: "Kos needs access to your Downloads folder through connected tools."
   target:
     - target: dmg
       arch:
@@ -103,21 +103,21 @@ mac:
     - "!**/vendor/copilot/linux-*/**"
     - "!**/vendor/copilot/win32-*/**"
   # Use predictable naming for macOS packages (applies to zip; dmg uses its own config below)
-  artifactName: "Craft-Agent-${arch}.${ext}"
+  artifactName: "Kos-${arch}.${ext}"
   # Code signing & notarization (disabled by default for local builds)
   # To enable: set CSC_LINK, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID
   # notarize:
   #   teamId: ${APPLE_TEAM_ID}
 
 dmg:
-  # Use predictable naming: Craft-Agent-arm64.dmg, Craft-Agent-x64.dmg
-  artifactName: "Craft-Agent-${arch}.dmg"
+  # Use predictable naming: Kos-arm64.dmg, Kos-x64.dmg
+  artifactName: "Kos-${arch}.dmg"
   # Custom background (multi-resolution TIFF with 1x+2x for retina support)
   background: resources/dmg-background.tiff
   # Use app icon as the mounted volume icon in Finder
   icon: resources/icon.icns
   iconSize: 80
-  title: "Craft Agents"
+  title: "Kos"
   contents:
     - x: 130
       y: 200
@@ -135,8 +135,8 @@ win:
     - target: nsis
       arch:
         - x64
-  # Use predictable naming: Craft-Agent-x64.exe
-  artifactName: "Craft-Agent-${arch}.${ext}"
+  # Use predictable naming: Kos-x64.exe
+  artifactName: "Kos-${arch}.${ext}"
   files:
     # Exclude binaries for other platforms
     - "!**/vendor/codex/darwin-*/**"
@@ -178,12 +178,12 @@ nsis:
 linux:
   icon: resources/icon.png
   category: Utility
-  maintainer: "Craft Docs Ltd. <support@craft.do>"
+  maintainer: "Kos Inc. <support@kos.ai>"
   target:
     - target: AppImage
       arch:
         - x64
-  artifactName: "Craft-Agent-${arch}.${ext}"
+  artifactName: "Kos-${arch}.${ext}"
   extraResources:
     - from: node_modules/@anthropic-ai/claude-agent-sdk
       to: app/node_modules/@anthropic-ai/claude-agent-sdk

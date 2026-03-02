@@ -34,6 +34,11 @@ import { handleUpdatePreferences } from './handlers/update-preferences.ts';
 import { handleTransformData } from './handlers/transform-data.ts';
 import { handleRenderTemplate } from './handlers/render-template.ts';
 import { handleSetSessionStatus } from './handlers/set-session-status.ts';
+import {
+  handleBrowserOpen,
+  handleBrowserSnapshot,
+  handleBrowserAction,
+} from './handlers/browser-panel.ts';
 
 // ============================================================
 // Canonical Zod Schemas
@@ -136,6 +141,19 @@ export const RenderTemplateSchema = z.object({
   data: z.record(z.string(), z.unknown()).describe('JSON data to render into the template'),
 });
 
+export const BrowserOpenSchema = z.object({
+  url: z.string().url().describe('URL to navigate to in the browser panel'),
+});
+
+export const BrowserSnapshotSchema = z.object({});
+
+export const BrowserActionSchema = z.object({
+  action: z.enum(['click', 'fill', 'select', 'scroll', 'hover'])
+    .describe('The interaction to perform on the element'),
+  ref: z.string().describe('Element ref from browser_snapshot (e.g. "e33")'),
+  value: z.string().optional().describe('Value for fill/select actions'),
+});
+
 export const SpawnSessionSchema = z.object({
   help: z.boolean().optional().describe('If true, returns available connections, models, and sources instead of creating a session'),
   prompt: z.string().optional().describe('Instructions for the new session (required when not in help mode)'),
@@ -168,7 +186,7 @@ The plan will be displayed to the user in a special formatted view.
 - The conversation will resume when the user responds (accept, modify, or reject the plan)
 - Do NOT include any text or tool calls after SubmitPlan - they will not be executed`,
 
-  config_validate: `Validate Craft Agent configuration files.
+  config_validate: `Validate Kos configuration files.
 
 Use this after editing configuration files to check for errors before they take effect.
 Returns structured validation results with errors, warnings, and suggestions.
@@ -332,6 +350,25 @@ When spawning, the 'prompt' parameter is required.
 
 The spawned session appears in the session list and runs fire-and-forget.
 Only use 'attachments' for existing file paths on disk — the tool reads them automatically.`,
+
+  browser_open: `Open a browser panel in the right sidebar and navigate to a URL.
+
+The user will see a real Chromium browser instance rendering the page in real time.
+Use browser_snapshot after opening to get the page's accessibility tree.`,
+
+  browser_snapshot: `Get an accessibility tree snapshot of the current browser page.
+
+Returns a YAML-like tree with element refs (e.g. e1, e2, e33) that can be used
+with browser_action to interact with elements. Always call this before interacting.`,
+
+  browser_action: `Interact with an element in the browser panel by its ref ID.
+
+Use refs from browser_snapshot output. Actions:
+- click: Click the element
+- fill: Type text into an input field (requires value)
+- select: Select an option (requires value)
+- scroll: Scroll element into view
+- hover: Hover over element`,
 } as const;
 
 // ============================================================
@@ -372,6 +409,9 @@ export const SESSION_TOOL_DEFS: SessionToolDef[] = [
   { name: 'render_template', description: TOOL_DESCRIPTIONS.render_template, inputSchema: RenderTemplateSchema, handler: handleRenderTemplate },
   { name: 'call_llm', description: TOOL_DESCRIPTIONS.call_llm, inputSchema: CallLlmSchema, handler: null },
   { name: 'spawn_session', description: TOOL_DESCRIPTIONS.spawn_session, inputSchema: SpawnSessionSchema, handler: null },
+  { name: 'browser_open', description: TOOL_DESCRIPTIONS.browser_open, inputSchema: BrowserOpenSchema, handler: handleBrowserOpen },
+  { name: 'browser_snapshot', description: TOOL_DESCRIPTIONS.browser_snapshot, inputSchema: BrowserSnapshotSchema, handler: handleBrowserSnapshot },
+  { name: 'browser_action', description: TOOL_DESCRIPTIONS.browser_action, inputSchema: BrowserActionSchema, handler: handleBrowserAction },
 ];
 
 // ============================================================

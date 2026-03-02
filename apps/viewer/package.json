@@ -1,7 +1,7 @@
 {
-  "name": "@craft-agent/viewer",
+  "name": "@kos/viewer",
   "version": "0.5.1",
-  "description": "Web viewer for Craft Agents sessions - upload and share session transcripts",
+  "description": "Web viewer for Kos sessions - upload and share session transcripts",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,8 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@craft-agent/core": "workspace:*",
-    "@craft-agent/ui": "workspace:*",
+    "@kos/core": "workspace:*",
+    "@kos/ui": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

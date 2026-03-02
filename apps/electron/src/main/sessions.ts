@@ -4,7 +4,7 @@ import { basename, join, normalize, isAbsolute, sep } from 'path'
 import { existsSync } from 'fs'
 import { appendFile, readFile, realpath } from 'fs/promises'
 import { homedir, tmpdir } from 'os'
-import { type AgentEvent, setPermissionMode, type PermissionMode, unregisterSessionScopedToolCallbacks, AbortReason, type AuthRequest, type AuthResult, type CredentialAuthRequest } from '@craft-agent/shared/agent'
+import { type AgentEvent, setPermissionMode, type PermissionMode, unregisterSessionScopedToolCallbacks, AbortReason, type AuthRequest, type AuthResult, type CredentialAuthRequest } from '@kos/shared/agent'
 import {
   resolveSessionConnection,
   createBackendFromConnection,
@@ -14,8 +14,8 @@ import {
   type AgentBackend,
   type BackendHostRuntimeContext,
   type PostInitResult,
-} from '@craft-agent/shared/agent/backend'
-import { getLlmConnection, getDefaultLlmConnection } from '@craft-agent/shared/config'
+} from '@kos/shared/agent/backend'
+import { getLlmConnection, getDefaultLlmConnection } from '@kos/shared/config'
 import { sessionLog, isDebugMode, getLogFilePath } from './logger'
 import { InitGate } from './init-gate'
 import type { WindowManager } from './window-manager'
@@ -29,8 +29,8 @@ import {
   migrateOrphanedDefaultConnections,
   MODEL_REGISTRY,
   type Workspace,
-} from '@craft-agent/shared/config'
-import { loadWorkspaceConfig } from '@craft-agent/shared/workspaces'
+} from '@kos/shared/config'
+import { loadWorkspaceConfig } from '@kos/shared/workspaces'
 import {
   // Session persistence functions
   listSessions as listStoredSessions,
@@ -59,27 +59,27 @@ import {
   type SessionMetadata,
   type SessionStatus,
   pickSessionFields,
-} from '@craft-agent/shared/sessions'
-import { loadWorkspaceSources, loadAllSources, getSourcesBySlugs, isSourceUsable, type LoadedSource, type McpServerConfig, getSourcesNeedingAuth, getSourceCredentialManager, getSourceServerBuilder, type SourceWithCredential, isApiOAuthProvider, SERVER_BUILD_ERRORS, TokenRefreshManager, createTokenGetter } from '@craft-agent/shared/sources'
-import { ConfigWatcher, type ConfigWatcherCallbacks } from '@craft-agent/shared/config'
-import { getValidClaudeOAuthToken } from '@craft-agent/shared/auth'
-import { resolveAuthEnvVars } from '@craft-agent/shared/config'
-import { toolMetadataStore } from '@craft-agent/shared/interceptor'
-import { getCredentialManager } from '@craft-agent/shared/credentials'
-import { CraftMcpClient, McpClientPool, McpPoolServer } from '@craft-agent/shared/mcp'
+} from '@kos/shared/sessions'
+import { loadWorkspaceSources, loadAllSources, getSourcesBySlugs, isSourceUsable, type LoadedSource, type McpServerConfig, getSourcesNeedingAuth, getSourceCredentialManager, getSourceServerBuilder, type SourceWithCredential, isApiOAuthProvider, SERVER_BUILD_ERRORS, TokenRefreshManager, createTokenGetter } from '@kos/shared/sources'
+import { ConfigWatcher, type ConfigWatcherCallbacks } from '@kos/shared/config'
+import { getValidClaudeOAuthToken } from '@kos/shared/auth'
+import { resolveAuthEnvVars } from '@kos/shared/config'
+import { toolMetadataStore } from '@kos/shared/interceptor'
+import { getCredentialManager } from '@kos/shared/credentials'
+import { CraftMcpClient, McpClientPool, McpPoolServer } from '@kos/shared/mcp'
 import { type Session, type Message, type SessionEvent, type FileAttachment, type StoredAttachment, type SendMessageOptions, IPC_CHANNELS, generateMessageId } from '../shared/types'
-import { formatPathsToRelative, formatToolInputPaths, perf, encodeIconToDataUrl, getEmojiIcon, resetSummarizationClient, resolveToolIcon, readFileAttachment } from '@craft-agent/shared/utils'
-import { loadAllSkills, loadSkillBySlug, type LoadedSkill } from '@craft-agent/shared/skills'
-import type { ToolDisplayMeta } from '@craft-agent/core/types'
-import { getToolIconsDir, getMiniModel } from '@craft-agent/shared/config'
-import type { SummarizeCallback } from '@craft-agent/shared/sources'
-import { type ThinkingLevel, DEFAULT_THINKING_LEVEL } from '@craft-agent/shared/agent/thinking-levels'
-import type { DiagramType } from '@craft-agent/shared/workspaces/types'
-import { evaluateAutoLabels } from '@craft-agent/shared/labels/auto'
-import { listLabels } from '@craft-agent/shared/labels/storage'
-import { extractLabelId } from '@craft-agent/shared/labels'
-import { AutomationSystem, AUTOMATIONS_HISTORY_FILE, type AutomationSystemMetadataSnapshot } from '@craft-agent/shared/automations'
-import { loadStatusConfig } from '@craft-agent/shared/statuses'
+import { formatPathsToRelative, formatToolInputPaths, perf, encodeIconToDataUrl, getEmojiIcon, resetSummarizationClient, resolveToolIcon, readFileAttachment } from '@kos/shared/utils'
+import { loadAllSkills, loadSkillBySlug, type LoadedSkill } from '@kos/shared/skills'
+import type { ToolDisplayMeta } from '@kos/core/types'
+import { getToolIconsDir, getMiniModel } from '@kos/shared/config'
+import type { SummarizeCallback } from '@kos/shared/sources'
+import { type ThinkingLevel, DEFAULT_THINKING_LEVEL } from '@kos/shared/agent/thinking-levels'
+import type { DiagramType } from '@kos/shared/workspaces/types'
+import { evaluateAutoLabels } from '@kos/shared/labels/auto'
+import { listLabels } from '@kos/shared/labels/storage'
+import { extractLabelId } from '@kos/shared/labels'
+import { AutomationSystem, AUTOMATIONS_HISTORY_FILE, type AutomationSystemMetadataSnapshot } from '@kos/shared/automations'
+import { loadStatusConfig } from '@kos/shared/statuses'
 
 // Import and re-export (extracted to avoid Electron dependency in tests)
 import { sanitizeForTitle } from './title-sanitizer'
@@ -302,7 +302,7 @@ async function applyBridgeUpdates(
   agent: AgentInstance,
   sessionPath: string,
   enabledSources: LoadedSource[],
-  mcpServers: Record<string, import('@craft-agent/shared/agent/backend').SdkMcpServerConfig>,
+  mcpServers: Record<string, import('@kos/shared/agent/backend').SdkMcpServerConfig>,
   sessionId: string,
   workspaceRootPath: string,
   context: string,
@@ -367,8 +367,8 @@ function resolveToolDisplayMeta(
           'render_template': 'Render Template',
           'update_user_preferences': 'Update Preferences',
         },
-        'craft-agents-docs': {
-          'SearchCraftAgents': 'Search Docs',
+        'kos-docs': {
+          'SearchKos': 'Search Docs',
         },
       }
 
@@ -443,7 +443,7 @@ function resolveToolDisplayMeta(
 
   // CLI tool icon resolution for Bash commands
   // Parses the command string to detect known tools (git, npm, docker, etc.)
-  // and resolves their brand icon from ~/.craft-agent/tool-icons/
+  // and resolves their brand icon from ~/.kos/tool-icons/
   if (toolName === 'Bash' && toolInput?.command) {
     try {
       const toolIconsDir = getToolIconsDir()
@@ -507,7 +507,7 @@ interface ManagedSession {
   // Used to detect if a follow-up message has superseded the current one (stale-request guard).
   processingGeneration: number
   // NOTE: Parent-child tracking state (pendingTools, parentToolStack, toolToParentMap,
-  // pendingTextParent) has been removed. CraftAgent now provides parentToolUseId
+  // pendingTextParent) has been removed. ClaudeAgent now provides parentToolUseId
   // directly on all events using the SDK's authoritative parent_tool_use_id field.
   // See: packages/shared/src/agent/tool-matching.ts
   // Session name (user-defined or AI-generated)
@@ -776,6 +776,8 @@ export class SessionManager {
   private automationSystems: Map<string, AutomationSystem> = new Map()
   // Pending credential request resolvers (keyed by requestId)
   private pendingCredentialResolvers: Map<string, (response: import('../shared/types').CredentialResponse) => void> = new Map()
+  // Pending browser panel request resolvers (keyed by requestId, like queryFn for call_llm)
+  private pendingBrowserResolvers: Map<string, { resolve: (result: unknown) => void; reject: (error: Error) => void }> = new Map()
   // Promise deduplication for lazy-loading messages (prevents race conditions)
   private messageLoadingPromises: Map<string, Promise<void>> = new Map()
   /**
@@ -893,19 +895,19 @@ export class SessionManager {
       onSkillChange: async (slug, skill) => {
         sessionLog.info(`Skill '${slug}' changed:`, skill ? 'updated' : 'deleted')
         // Broadcast updated list to UI
-        const { loadAllSkills } = await import('@craft-agent/shared/skills')
+        const { loadAllSkills } = await import('@kos/shared/skills')
         const skills = loadAllSkills(workspaceRootPath)
         this.broadcastSkillsChanged(skills)
       },
       onNotesListChange: async () => {
         sessionLog.info(`Notes list changed in ${workspaceRootPath}`)
-        const { loadAllNotes } = await import('@craft-agent/shared/notes')
+        const { loadAllNotes } = await import('@kos/shared/notes')
         const notes = loadAllNotes(workspaceRootPath)
         this.broadcastNotesChanged(notes)
       },
       onNoteChange: async (noteId) => {
         sessionLog.info(`Note '${noteId}' changed`)
-        const { loadAllNotes } = await import('@craft-agent/shared/notes')
+        const { loadAllNotes } = await import('@kos/shared/notes')
         const notes = loadAllNotes(workspaceRootPath)
         this.broadcastNotesChanged(notes)
       },
@@ -1089,7 +1091,7 @@ export class SessionManager {
   /**
    * Broadcast app theme changed event to all windows
    */
-  private broadcastAppThemeChanged(theme: import('@craft-agent/shared/config').ThemeOverrides | null): void {
+  private broadcastAppThemeChanged(theme: import('@kos/shared/config').ThemeOverrides | null): void {
     if (!this.windowManager) return
     sessionLog.info(`Broadcasting app theme changed`)
     this.windowManager.broadcastToAll(IPC_CHANNELS.THEME_APP_CHANGED, theme)
@@ -1107,7 +1109,7 @@ export class SessionManager {
   /**
    * Broadcast skills changed event to all windows
    */
-  private broadcastSkillsChanged(skills: import('@craft-agent/shared/skills').LoadedSkill[]): void {
+  private broadcastSkillsChanged(skills: import('@kos/shared/skills').LoadedSkill[]): void {
     if (!this.windowManager) return
     sessionLog.info(`Broadcasting skills changed (${skills.length} skills)`)
     this.windowManager.broadcastToAll(IPC_CHANNELS.SKILLS_CHANGED, skills)
@@ -1116,7 +1118,7 @@ export class SessionManager {
   /**
    * Broadcast notes changed event to all windows
    */
-  private broadcastNotesChanged(notes: import('@craft-agent/shared/notes').LoadedNote[]): void {
+  private broadcastNotesChanged(notes: import('@kos/shared/notes').LoadedNote[]): void {
     if (!this.windowManager) return
     sessionLog.info(`Broadcasting notes changed (${notes.length} notes)`)
     this.windowManager.broadcastToAll(IPC_CHANNELS.NOTES_CHANGED, notes)
@@ -1124,7 +1126,7 @@ export class SessionManager {
 
   /**
    * Broadcast default permissions changed event to all windows
-   * Triggered when ~/.craft-agent/permissions/default.json changes
+   * Triggered when ~/.kos/permissions/default.json changes
    */
   private broadcastDefaultPermissionsChanged(): void {
     if (!this.windowManager) return
@@ -1143,7 +1145,7 @@ export class SessionManager {
     const workspaceRootPath = managed.workspace.rootPath
     sessionLog.info(`Reloading sources for session ${managed.id}`)
 
-    // Reload all sources from disk (craft-agents-docs is always available as MCP server)
+    // Reload all sources from disk (kos-docs is always available as MCP server)
     const allSources = loadAllSources(workspaceRootPath)
     managed.agent.setAllSources(allSources)
 
@@ -1485,7 +1487,7 @@ export class SessionManager {
         onError: (err) => sessionLog.error(`[OAuth ${request.sourceSlug}] ${err}`),
       }, {
         sessionId: managed.id,
-        deeplinkScheme: process.env.CRAFT_DEEPLINK_SCHEME || 'craftagents',
+        deeplinkScheme: process.env.KOS_DEEPLINK_SCHEME || 'kos',
       })
 
       if (result.success) {
@@ -1686,7 +1688,7 @@ export class SessionManager {
       }
 
       // Update source config to mark as authenticated
-      const { markSourceAuthenticated } = await import('@craft-agent/shared/sources')
+      const { markSourceAuthenticated } = await import('@kos/shared/sources')
       markSourceAuthenticated(managed.workspace.rootPath, request.sourceSlug)
 
       // Mark source as unseen so fresh guide is injected on next message
@@ -2184,7 +2186,7 @@ export class SessionManager {
 
   /**
    * Get or create agent for a session (lazy loading)
-   * Creates CraftAgent for Claude or CodexBackend for Codex based on LLM connection.
+   * Creates ClaudeAgent for Claude or CodexBackend for Codex based on LLM connection.
    *
    * Provider resolution order:
    * 1. session.llmConnection (locked after first message)
@@ -2221,10 +2223,10 @@ export class SessionManager {
       }
 
       // Set session directory for tool metadata cross-process sharing.
-      // The SDK subprocess reads CRAFT_SESSION_DIR to write tool-metadata.json;
+      // The SDK subprocess reads KOS_SESSION_DIR to write tool-metadata.json;
       // the main process reads it via toolMetadataStore.setSessionDir().
       const sessionDirForMetadata = getSessionStoragePath(managed.workspace.rootPath, managed.id)
-      process.env.CRAFT_SESSION_DIR = sessionDirForMetadata
+      process.env.KOS_SESSION_DIR = sessionDirForMetadata
       toolMetadataStore.setSessionDir(sessionDirForMetadata)
 
       // Set up agentReady promise so title generation can await agent creation
@@ -2388,7 +2390,7 @@ export class SessionManager {
       }
 
       // Note: Credential requests now flow through onAuthRequest (unified auth flow)
-      // The legacy onCredentialRequest callback has been removed from CraftAgent
+      // The legacy onCredentialRequest callback has been removed from ClaudeAgent
       // Auth refresh for mid-session token expiry is handled by the error handler in sendMessage
       // which destroys/recreates the agent to get fresh credentials
 
@@ -2583,6 +2585,43 @@ export class SessionManager {
         }
       }
 
+      // Wire up browser panel callbacks (async request-response via IPC, like queryFn)
+      managed.agent.onBrowserOpen = async (url: string) => {
+        const requestId = crypto.randomUUID()
+        // Emit session event to renderer → opens panel + navigates webview
+        this.sendEvent({
+          type: 'browser_panel_open',
+          sessionId: managed.id,
+          url,
+          requestId,
+        }, managed.workspace.id)
+        // Wait for renderer to respond via BROWSER_RESULT IPC
+        return this.waitForBrowserResult(requestId, 30000) as Promise<{ title?: string }>
+      }
+
+      managed.agent.onBrowserSnapshot = async () => {
+        const requestId = crypto.randomUUID()
+        this.sendEvent({
+          type: 'browser_panel_snapshot',
+          sessionId: managed.id,
+          requestId,
+        }, managed.workspace.id)
+        return this.waitForBrowserResult(requestId, 10000) as Promise<string>
+      }
+
+      managed.agent.onBrowserAction = async (action: string, ref: string, value?: string) => {
+        const requestId = crypto.randomUUID()
+        this.sendEvent({
+          type: 'browser_panel_action',
+          sessionId: managed.id,
+          requestId,
+          action,
+          ref,
+          value,
+        }, managed.workspace.id)
+        return this.waitForBrowserResult(requestId, 10000) as Promise<string>
+      }
+
       // Wire up onSourceActivationRequest to auto-enable sources when agent tries to use them
       managed.agent.onSourceActivationRequest = async (sourceSlug: string): Promise<boolean> => {
         sessionLog.info(`Source activation request for session ${managed.id}:`, sourceSlug)
@@ -2765,7 +2804,7 @@ export class SessionManager {
     }
 
     // Validate connection exists
-    const { getLlmConnection } = await import('@craft-agent/shared/config/storage')
+    const { getLlmConnection } = await import('@kos/shared/config/storage')
     const connection = getLlmConnection(connectionSlug)
     if (!connection) {
       sessionLog.warn(`setSessionConnection: connection "${connectionSlug}" not found`)
@@ -2864,7 +2903,7 @@ export class SessionManager {
         return { success: false, error: 'Session file not found' }
       }
 
-      const { VIEWER_URL } = await import('@craft-agent/shared/branding')
+      const { VIEWER_URL } = await import('@kos/shared/branding')
       const response = await fetch(`${VIEWER_URL}/s/api`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2928,7 +2967,7 @@ export class SessionManager {
         return { success: false, error: 'Session file not found' }
       }
 
-      const { VIEWER_URL } = await import('@craft-agent/shared/branding')
+      const { VIEWER_URL } = await import('@kos/shared/branding')
       const response = await fetch(`${VIEWER_URL}/s/api/${managed.sharedId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -2973,7 +3012,7 @@ export class SessionManager {
     this.sendEvent({ type: 'async_operation', sessionId, isOngoing: true }, managed.workspace.id)
 
     try {
-      const { VIEWER_URL } = await import('@craft-agent/shared/branding')
+      const { VIEWER_URL } = await import('@kos/shared/branding')
       const response = await fetch(
         `${VIEWER_URL}/s/api/${managed.sharedId}`,
         { method: 'DELETE' }
@@ -3794,7 +3833,7 @@ export class SessionManager {
 
       // Skills mentioned via @mentions are handled by the SDK's Skill tool.
       // The UI layer (extractBadges in mentions.ts) injects fully-qualified names
-      // in the rawText, and canUseTool in craft-agent.ts provides a fallback
+      // in the rawText, and canUseTool in claude-agent.ts provides a fallback
       // to qualify short names. No transformation needed here.
 
       // Ensure main process reads tool metadata from the correct session directory.
@@ -4533,7 +4572,7 @@ To view this task's output:
         const existingStartMsg = managed.messages.find(m => m.toolUseId === event.toolUseId)
         const isDuplicateEvent = !!existingStartMsg
 
-        // Use parentToolUseId directly from the event — CraftAgent resolves this
+        // Use parentToolUseId directly from the event — ClaudeAgent resolves this
         // from SDK's parent_tool_use_id (authoritative, handles parallel Tasks correctly).
         // No stack or map needed; the event carries the correct parent from the start.
         const parentToolUseId = event.parentToolUseId
@@ -4610,7 +4649,7 @@ To view this task's output:
       }
 
       case 'tool_result': {
-        // toolName comes directly from CraftAgent (resolved via ToolIndex)
+        // toolName comes directly from ClaudeAgent (resolved via ToolIndex)
         const toolName = event.toolName || 'unknown'
 
         // Format absolute paths to relative paths for better readability
@@ -4630,7 +4669,7 @@ To view this task's output:
 
         sessionLog.info(`RESULT MATCH: toolUseId=${event.toolUseId}, found=${!!existingToolMsg}, toolName=${existingToolMsg?.toolName || toolName}, wasComplete=${wasAlreadyComplete}`)
 
-        // parentToolUseId comes from CraftAgent (SDK-authoritative) or existing message
+        // parentToolUseId comes from ClaudeAgent (SDK-authoritative) or existing message
         const parentToolUseId = existingToolMsg?.parentToolUseId || event.parentToolUseId
 
         if (existingToolMsg) {
@@ -4960,7 +4999,7 @@ To view this task's output:
         break
 
       case 'complete':
-        // Complete event from CraftAgent - accumulate usage from this turn
+        // Complete event from ClaudeAgent - accumulate usage from this turn
         // Actual 'complete' sent to renderer comes from the finally block in sendMessage
         if (event.usage) {
           // Initialize tokenUsage if not set
@@ -5215,11 +5254,48 @@ To view this task's output:
     // Clear pending credential resolvers (they won't be resolved, but prevents memory leak)
     this.pendingCredentialResolvers.clear()
 
+    // Clear pending browser resolvers (reject with cleanup error)
+    for (const [, resolver] of this.pendingBrowserResolvers) {
+      resolver.reject(new Error('Session manager cleanup'))
+    }
+    this.pendingBrowserResolvers.clear()
+
     // Clean up session-scoped tool callbacks for all sessions
     for (const sessionId of this.sessions.keys()) {
       unregisterSessionScopedToolCallbacks(sessionId)
     }
 
     sessionLog.info('Cleanup complete')
+  }
+
+  // ============================================================
+  // Browser Panel — request-response bridge (main ↔ renderer)
+  // ============================================================
+
+  /**
+   * Wait for a browser panel response from the renderer.
+   * Called by agent callbacks (onBrowserOpen, onBrowserSnapshot, onBrowserAction).
+   */
+  private waitForBrowserResult(requestId: string, timeoutMs: number): Promise<unknown> {
+    return new Promise((resolve, reject) => {
+      this.pendingBrowserResolvers.set(requestId, { resolve, reject })
+      setTimeout(() => {
+        if (this.pendingBrowserResolvers.has(requestId)) {
+          this.pendingBrowserResolvers.delete(requestId)
+          reject(new Error(`Browser request timeout (${timeoutMs}ms)`))
+        }
+      }, timeoutMs)
+    })
+  }
+
+  /**
+   * Resolve a pending browser request (called from IPC handler when renderer responds).
+   */
+  resolveBrowserRequest(requestId: string, result: unknown): void {
+    const resolver = this.pendingBrowserResolvers.get(requestId)
+    if (resolver) {
+      this.pendingBrowserResolvers.delete(requestId)
+      resolver.resolve(result)
+    }
   }
 }

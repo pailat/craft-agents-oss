@@ -2,7 +2,7 @@
  * Set Session Status Handler
  *
  * Allows the agent to update the current session's workflow status.
- * Uses an injected setSessionStatus callback to avoid depending on @craft-agent/shared.
+ * Uses an injected setSessionStatus callback to avoid depending on @kos/shared.
  */
 
 import type { SessionToolContext } from '../context.ts';

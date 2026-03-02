@@ -155,7 +155,7 @@ export interface SessionToolContext {
   /** Unique session identifier */
   sessionId: string;
 
-  /** Absolute path to workspace folder (~/.craft-agent/workspaces/{id}) */
+  /** Absolute path to workspace folder (~/.kos/workspaces/{id}) */
   workspacePath: string;
 
   /** Path to sources folder within workspace */
@@ -305,6 +305,29 @@ export interface SessionToolContext {
    * Returns void on success, or { error: string } on failure.
    */
   setSessionStatus?(statusId: string): void | { error: string };
+
+  // ============================================================
+  // Browser Panel (optional — only available in Electron)
+  // ============================================================
+
+  /**
+   * Open the browser panel and navigate to URL.
+   * Returns page title when loaded.
+   * Only available in Electron (has webview support).
+   */
+  browserOpen?(url: string): Promise<{ title?: string }>;
+
+  /**
+   * Get accessibility snapshot of the current browser page.
+   * Returns YAML-like tree with element refs.
+   */
+  browserSnapshot?(): Promise<string>;
+
+  /**
+   * Perform an action on a browser element by ref ID.
+   * Returns confirmation or updated state.
+   */
+  browserAction?(action: string, ref: string, value?: string): Promise<string>;
 
   // ============================================================
   // Session Paths (for transform_data / render_template)

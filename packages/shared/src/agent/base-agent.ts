@@ -16,7 +16,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { AgentEvent } from '@craft-agent/core/types';
+import type { AgentEvent } from '@kos/core/types';
 import type { FileAttachment } from '../utils/files.ts';
 import type { ThinkingLevel } from './thinking-levels.ts';
 import { DEFAULT_THINKING_LEVEL } from './thinking-levels.ts';
@@ -208,6 +208,10 @@ export abstract class BaseAgent implements AgentBackend {
   onBackendAuthRequired: ((reason: string) => void) | null = null;
   onSpawnSession: ((request: SpawnSessionRequest) => Promise<SpawnSessionResult>) | null = null;
   onStatusChanged: ((statusId: string) => void) | null = null;
+  // Browser panel callbacks (async, Electron-only — like onSpawnSession)
+  onBrowserOpen: ((url: string) => Promise<{ title?: string }>) | null = null;
+  onBrowserSnapshot: (() => Promise<string>) | null = null;
+  onBrowserAction: ((action: string, ref: string, value?: string) => Promise<string>) | null = null;
 
   // ============================================================
   // Constructor
